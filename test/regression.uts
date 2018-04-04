@@ -171,13 +171,14 @@ assert get_var("init_value") == 123
  
 = Session test with fname
 
-init_session("scapySession2")
+session_name = tempfile.mktemp()
+init_session(session_name)
 set_var("test_value", IP(dst="192.168.0.1")) # test_value = IP(dst="192.168.0.1")
-save_session(fname="scapySession1.dat")
+save_session(fname="%s.dat" % session_name)
 del_var("test_value")
 
 set_var("z", True) #z = True
-load_session(fname="scapySession1.dat")
+load_session(fname="%s.dat" % session_name)
 try:
     get_var("z")
     assert False
@@ -185,13 +186,13 @@ except:
     pass
 
 set_var("z", False) #z = False
-update_session(fname="scapySession1.dat")
+update_session(fname="%s.dat" % session_name)
 assert get_var("test_value").dst == "192.168.0.1" #test_value.dst == "192.168.0.1"
 assert not get_var("z")
 
 = Clear session files
 
-os.remove("scapySession1.dat")
+os.remove("%s.dat" % session_name)
 
 = Test temporary file creation
 ~ appveyor_only
@@ -800,6 +801,15 @@ assert(x.PDU.varbindlist[0].value == b"172.31.19.2")
 assert(x.PDU.varbindlist[2].oid == "1.3.6.1.4.1.253.8.64.4.2.1.5.10.14130400")
 assert(x.PDU.varbindlist[2].value == 1)
 
+= Basic UDP/SNMP bindings
+~ SNMP ASN1
+z = UDP()/x
+z = UDP(raw(z))
+assert SNMP in z
+
+x = UDP()/SNMP()
+assert x.sport == x.dport == 161
+
 = ASN1 - ASN1_Object
 assert ASN1_Object(1) == ASN1_Object(1)
 assert ASN1_Object(1) > ASN1_Object(0)
@@ -1213,6 +1223,34 @@ for i in range(10):
 
 response = res[0][1]
 assert response[ICMP].type == 0
+
+= Test set of sent_time by sr
+~ netaccess IP ICMP
+packet = IP(dst="8.8.8.8")/ICMP()
+r = sr(packet)
+assert packet.sent_time is not None
+
+= Test set of sent_time by sr (multiple packets)
+~ netaccess IP ICMP
+packet1 = IP(dst="8.8.8.8")/ICMP()
+packet2 = IP(dst="8.8.4.4")/ICMP()
+r = sr([packet1, packet2])
+assert packet1.sent_time is not None
+assert packet2.sent_time is not None
+
+= Test set of sent_time by srflood
+~ netaccess IP ICMP
+packet = IP(dst="8.8.8.8")/ICMP()
+r = srflood(packet)
+assert packet.sent_time is not None
+
+= Test set of sent_time by srflood (multiple packets)
+~ netaccess IP ICMP
+packet1 = IP(dst="8.8.8.8")/ICMP()
+packet2 = IP(dst="8.8.4.4")/ICMP()
+r = srflood([packet1, packet2])
+assert packet1.sent_time is not None
+assert packet2.sent_time is not None
 
 ############
 ############
@@ -2944,6 +2982,12 @@ s = raw(IPv6()/ICMPv6NIQueryName(data="n.d.org"))
 p = IPv6(s)
 ICMPv6NIQueryName in p and p[ICMPv6NIQueryName].data == b"n.d.org"
 
+= ICMPv6NIQueryName - dissection
+s = b'\x8b\x00z^\x00\x02\x00\x00\x00\x03g\x90\xc7\xa3\xdd[\xff\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+p = ICMPv6NIQueryName(s)
+p.show()
+assert ICMPv6NIQueryName in p and p.data == "ff02::1"
+
 
 ############
 ############
@@ -3011,6 +3055,20 @@ type(a) is tuple and len(a) == 2 and a[0] == 2 and a[1] == '169.254.253.252'
 
 = ICMPv6NIQueryIPv4 - IPv4 address
 ICMPv6NIQueryIPv4(data="169.254.253.252").data == '169.254.253.252'
+
+= ICMPv6NIQueryIPv4 - dissection
+s = b'\x8b\x01\x00\x00\x00\x04\x00\x00\xc2\xb9\xc2\x96\xc3\xa1.H\x07freebsd\x00\x00'
+p = ICMPv6NIQueryIPv4(s)
+p.show()
+assert ICMPv6NIQueryIPv4 in p and p.data == b"freebsd"
+
+= ICMPv6NIQueryIPv4 - hashret()
+~ not_pypy random_weird_py3
+random.seed(0x2807)
+p = IPv6()/ICMPv6NIQueryIPv4(data="freebsd")
+h_py2 = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00:\xe10S7\x9d\x91\x84\xc9'
+h_py3 = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00:\xa8\x19uE\x01\xcf\xe3\x04'
+assert p.hashret() in [h_py2, h_py3]
 
 
 ############
@@ -3241,6 +3299,13 @@ type(a) is tuple and len(a) == 2 and a[0] == 2 and type(a[1]) is list and len(a[
 = ICMPv6NIReplyName - [ttl, single-label, single-label, fqdn]
 ICMPv6NIReplyName(data=[42, "abricot", "poire", "n.d.tld"]).data == [42, b"abricot", b"poire", b"n.d.tld"]
 
+= ICMPv6NIReplyName - dissection
+
+s = b'\x8c\x00\xd1\x0f\x00\x02\x00\x00\x00\x00\xd9$\x94\x8d\xc6%\x00\x00\x00\x00\x07freebsd\x00\x00'
+p = ICMPv6NIReplyName(s)
+p.show()
+assert ICMPv6NIReplyName in p and p.data == [0, b'freebsd']
+
 
 ############
 ############
@@ -3426,6 +3491,8 @@ raw(defragment6(l)) == b'`\x00\x00\x00\x0f\xb4\x06@\x00\x00\x00\x00\x00\x00\x00\
 + Test Route6 class
 
 = Route6 - Route6 flushing
+conf_iface = conf.iface
+conf.iface = "eth0"
 conf.route6.routes=[
 (                               '::1', 128,                       '::',   'lo', ['::1'], 1), 
 (          'fe80::20f:1fff:feca:4650', 128,                       '::',   'lo', ['::1'], 1)]
@@ -3443,6 +3510,7 @@ conf.route6.routes=[
 (                                '::',   0, 'fe80::20f:34ff:fe8a:8aa1', 'eth0', ['2001:db8:0:4444:20f:1fff:feca:4650', '2002:db8:0:4444:20f:1fff:feca:4650'], 1)
 ]
 conf.route6.route("2002::1") == ('eth0', '2002:db8:0:4444:20f:1fff:feca:4650', 'fe80::20f:34ff:fe8a:8aa1') and conf.route6.route("2001::1") == ('eth0', '2001:db8:0:4444:20f:1fff:feca:4650', 'fe80::20f:34ff:fe8a:8aa1') and conf.route6.route("fe80::20f:1fff:feab:4870") == ('eth0', 'fe80::20f:1fff:feca:4650', '::') and conf.route6.route("::1") == ('lo', '::1', '::') and conf.route6.route("::") == ('eth0', '2001:db8:0:4444:20f:1fff:feca:4650', 'fe80::20f:34ff:fe8a:8aa1') and conf.route6.route('ff00::') == ('eth0', '2001:db8:0:4444:20f:1fff:feca:4650', 'fe80::20f:34ff:fe8a:8aa1')
+conf.iface = conf_iface
 conf.route6.resync()
 if not len(conf.route6.routes):
     # IPv6 seems disabled. Force a route to ::1
@@ -3531,12 +3599,21 @@ assert ICMPv6MLQuery2 in p and p.sources_number == 1
 = ICMPv6MLReport2 - build & dissection
 p = IPv6()/IPv6ExtHdrHopByHop(options=[RouterAlert()])/ICMPv6MLReport2(records=[ICMPv6MLDMultAddrRec(), ICMPv6MLDMultAddrRec(sources=["::1"], auxdata="scapy")])
 s = raw(p)
-assert s == b'`\x00\x00\x00\x00O\x00@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01:\x00\x05\x02\x00\x00\x01\x00\x8f\x00\x1e\x9b\x00\x00\x00\x02\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x05\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01scapy'
+assert s == b'`\x00\x00\x00\x00M\x00@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01:\x00\x05\x02\x00\x00\x01\x00\x8f\x00\x1a\xa1\x00\x00\x00\x02\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x05\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01scapy'
 
 p = IPv6(s)
 assert ICMPv6MLReport2 in p and p.records_number == 2
 
-= Check awnswers
+= ICMPv6MLReport2 and ICMPv6MLDMultAddrRec - dissection
+
+z = b'33\x00\x00\x00\x16\xd0P\x99V\xdd\xf9\x86\xdd`\x00\x00\x00\x00\x1c:\x01\xfe\x80\x00\x00\x00\x00\x00\x00q eX\x98\x86\xfa\x88\xff\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x16\x8f\x00\x13\x4d\x00\x00\x00\x01\x04\x00\x00\x00\xff\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xffR\xf3\xe1'
+w = Ether(z)
+
+assert len(w.records) == 1
+assert isinstance(w.records[0], ICMPv6MLDMultAddrRec)
+assert w.records[0].dst == "ff02::1:ff52:f3e1"
+
+= Check answers
 
 q = IPv6()/IPv6ExtHdrHopByHop(options=[RouterAlert()])/ICMPv6MLQuery2()
 a = IPv6()/IPv6ExtHdrHopByHop(options=[RouterAlert()])/ICMPv6MLReport2()
@@ -3596,10 +3673,10 @@ test_show()
 saved_AS_resolver = conf.AS_resolver
 conf.AS_resolver = None
 tr6.make_graph()
-len(tr6.graphdef) == 492
-tr6.graphdef.startswith("digraph trace {") == True
+assert len(tr6.graphdef) == 530
+assert tr6.graphdef.startswith("digraph trace {")
 '"2001:db8::1 53/udp";' in tr6.graphdef
-conf.AS_resolver = conf.AS_resolver
+conf.AS_resolver = saved_AS_resolver 
 
 ############
 ############
@@ -5871,6 +5948,15 @@ wrpcap(filename, [IP()/UDP(), IPv6()/UDP()], linktype=DLT_RAW)
 packets = rdpcap(filename)
 assert(isinstance(packets[0], IP) and isinstance(packets[1], IPv6))
 
+= Check wrpcap() with no packet
+
+import tempfile
+filename = tempfile.mktemp(suffix=".pcap")
+wrpcap(filename, [])
+fstat = os.stat(filename)
+assert fstat.st_size != 0
+os.remove(filename)
+
 ############
 ############
 + LLMNR protocol
@@ -6271,7 +6357,7 @@ assert isinstance(pkt, DNS) and isinstance(pkt.payload, NoPayload)
 + Mocked read_routes() calls
 
 = Truncated netstat -rn output on OS X
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 import mock
 from io import StringIO
@@ -6326,12 +6412,70 @@ default            link#11            UCSI            1        0 bridge1
 test_osx_netstat_truncated()
 
 
+= OpenBSD 6.3
+~ mock_read_routes_bsd
+
+import mock
+from io import StringIO
+
+@mock.patch("scapy.arch.unix.OPENBSD")
+@mock.patch("scapy.arch.unix.os")
+def test_openbsd_6_3(mock_os, mock_openbsd):
+    """Test read_routes() on OpenBSD 6.3"""
+    # 'netstat -rn -f inet' output
+    netstat_output = u"""
+Routing tables
+
+Internet:
+Destination        Gateway            Flags   Refs      Use   Mtu  Prio Iface
+default            10.0.1.254         UGS        0        0     -     8 bge0 
+224/4              127.0.0.1          URS        0       23 32768     8 lo0  
+10.0.1/24          10.0.1.26          UCn        4      192     -     4 bge0 
+10.0.1.1           00:30:48:57:ed:0b  UHLc       2      338     -     3 bge0 
+10.0.1.2           00:03:ba:0c:0b:52  UHLc       1      186     -     3 bge0 
+10.0.1.26          00:30:48:62:b3:f4  UHLl       0    47877     -     1 bge0 
+10.0.1.135         link#1             UHLch      1      194     -     3 bge0 
+10.0.1.254         link#1             UHLch      1      190     -     3 bge0 
+10.0.1.255         10.0.1.26          UHb        0        0     -     1 bge0 
+10.188.6/24        10.188.6.17        Cn         0        0     -     4 tap3 
+10.188.6.17        fe:e1:ba:d7:ff:32  UHLl       0       25     -     1 tap3 
+10.188.6.255       10.188.6.17        Hb         0        0     -     1 tap3 
+10.188.135/24      10.0.1.135         UGS        0        0  1350 L   8 bge0 
+127/8              127.0.0.1          UGRS       0        0 32768     8 lo0  
+127.0.0.1          127.0.0.1          UHhl       1  3835230 32768     1 lo0  
+"""
+    # Mocked file descriptor
+    strio = StringIO(netstat_output)
+    mock_os.popen = mock.MagicMock(return_value=strio)
+    
+    # Mocked OpenBSD parsing behavior
+    mock_openbsd = True
+    # Test the function
+    from scapy.arch.unix import read_routes
+    routes = read_routes()
+    for r in routes:
+        print(ltoa(r[0]), ltoa(r[1]), r)
+        # check that default route exists in parsed data structure
+        if ltoa(r[0]) == "0.0.0.0":
+            default=r
+        # check that route with locked mtu exists in parsed data structure
+        if ltoa(r[0]) == "10.188.135.0":
+            locked=r
+    assert(len(routes) == 11)
+    assert(default[2] == "10.0.1.254")
+    assert(default[3] == "bge0")
+    assert(locked[2] == "10.0.1.135")
+    assert(locked[3] == "bge0")
+
+test_openbsd_6_3()
+
+
 ############
 ############
 + Mocked read_routes6() calls
 
 = Preliminary definitions
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 import mock
 from io import StringIO
@@ -6361,7 +6505,7 @@ def check_mandatory_ipv6_routes(routes6):
 
 
 = Mac OS X 10.9.5
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 @mock.patch("scapy.arch.unix.in6_getifaddr")
 @mock.patch("scapy.arch.unix.os")
@@ -6402,7 +6546,7 @@ test_osx_10_9_5()
 
 
 = Mac OS X 10.9.5 with global IPv6 connectivity
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 @mock.patch("scapy.arch.unix.in6_getifaddr")
 @mock.patch("scapy.arch.unix.os")
 def test_osx_10_9_5_global(mock_os, mock_in6_getifaddr):
@@ -6451,7 +6595,7 @@ test_osx_10_9_5_global()
 
 
 = Mac OS X 10.10.4
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 @mock.patch("scapy.arch.unix.in6_getifaddr")
 @mock.patch("scapy.arch.unix.os")
@@ -6491,7 +6635,7 @@ test_osx_10_10_4()
 
 
 = FreeBSD 10.2
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 @mock.patch("scapy.arch.unix.in6_getifaddr")
 @mock.patch("scapy.arch.unix.os")
@@ -6530,7 +6674,7 @@ test_freebsd_10_2()
 
 
 = OpenBSD 5.5
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 @mock.patch("scapy.arch.unix.OPENBSD")
 @mock.patch("scapy.arch.unix.in6_getifaddr")
@@ -6588,7 +6732,7 @@ test_openbsd_5_5()
 
 
 = NetBSD 7.0
-~ mock_read_routes6_bsd
+~ mock_read_routes_bsd
 
 @mock.patch("scapy.arch.unix.NETBSD")
 @mock.patch("scapy.arch.unix.in6_getifaddr")
@@ -7030,6 +7174,17 @@ assert(type(eap[EAP]) == EAP_PEAP)
 eap = LEAP()
 assert(type(eap[EAP]) == LEAP)
 
+= EAP - sessions (1)
+p = IP()/TCP()/EAP()
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
+
+= EAP - sessions (2)
+p = IP()/UDP()/EAP()
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
 
 
 ############
@@ -7053,7 +7208,6 @@ assert(not NTPControl in p)
 assert(NTPPrivate in p)
 assert(NTP in p)
 
-
 = NTP - Layers (2)
 p = NTPHeader()
 assert(type(p[NTP]) == NTPHeader)
@@ -7062,6 +7216,17 @@ assert(type(p[NTP]) == NTPControl)
 p = NTPPrivate()
 assert(type(p[NTP]) == NTPPrivate)
 
+= NTP - sessions (1)
+p = IP()/TCP()/NTP()
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
+
+= NTP - sessions (2)
+p = IP()/UDP()/NTP()
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
 
 ############
 ############
@@ -8597,6 +8762,18 @@ type(radius_attr[RadiusAttribute])
 assert(type(radius_attr[RadiusAttribute]) == RadiusAttr_EAP_Message)
 assert(EAP in radius_attr.value)
 
+= RADIUS - sessions (1)
+p = IP()/TCP(sport=1812)/Radius(authenticator="scapy")/RadiusAttribute(value="scapy")
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
+
+= RADIUS - sessions (2)
+p = IP()/UDP(sport=1812)/Radius(authenticator="scapy")/RadiusAttribute(value="scapy")
+l = PacketList(p)
+s = l.sessions()  # Crashed on commit: e42ecdc54556c4852ca06b1a6da6c1ccbf3f522e
+assert len(s) == 1
+
 
 ############
 ############
@@ -8908,7 +9085,7 @@ assert(rss == ("CON:" if six.PY2 else "foo.exe:"))
 
 random.seed(0x2807)
 rts = RandTermString(4, "scapy")
-assert(sane(raw(rts)) in ["...[scapy", "......scapy"])
+assert(sane(raw(rts)) in ["...Zscapy", "$#..scapy"])
 
 
 ############
@@ -9357,8 +9534,11 @@ Dot11 in p and p.addr3 == "00:00:00:00:00:00"
 p.mysummary() == '802.11 Management 0 00:00:00:00:00:00 > 00:00:00:00:00:00'
 
 = Dot11QoS - build
+s = raw(Dot11()/Dot11QoS(Ack_Policy=1))
+assert s == b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00 \x00'
+
 s = raw(Dot11(type=2, subtype=8)/Dot11QoS(TID=4))
-s == b'\x88\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00'
+assert s == b'\x88\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00'
 
 = Dot11 - binary in SSID
 pkt = Dot11() / Dot11Beacon() / Dot11Elt(ID=0, info=b"".join(chb(i) for i in range(32)))
@@ -9878,11 +10058,23 @@ def test_conversations(mock_do_graph):
     mock_do_graph.side_effect = fake_do_graph
     plist = PacketList([IP(dst="127.0.0.2")/TCP(dport=i) for i in range(2)])
     plist.extend([IP(src="127.0.0.2")/TCP(sport=i) for i in range(2)])
+    plist.extend([IPv6(dst="::2", src="::1")/TCP(sport=i) for i in range(2)])
+    plist.extend([IPv6(src="::2", dst="::1")/TCP(sport=i) for i in range(2)])
+    plist.extend([Ether()/ARP(pdst="127.0.0.1")])
     result_conversations = plist.conversations()
-    assert(len(result_conversations.split('\n')) == 5)
+    assert(len(result_conversations.split('\n')) == 8)
     assert(result_conversations.startswith('digraph "conv" {'))
+    assert("127.0.0.1" in result_conversations)
+    assert("::1" in result_conversations)
 
 test_conversations()
+
+= sessions()
+
+pl = PacketList([Ether()/IPv6()/ICMPv6EchoRequest(), Ether()/IPv6()/IPv6()])
+pl.extend([Ether()/IP()/IP(), Ether()/ARP()])
+pl.extend([Ether()/Ether()/IP()])
+assert(len(pl.sessions().keys()) == 5)
 
 = afterglow()
 
@@ -9986,3 +10178,15 @@ assert raw(created) == b'\x80\x11\x124\x00\xbcaN\xab\xcd\xef\x01'
 parsed = RTP(raw(created))
 assert parsed.sourcesync == 0xabcdef01
 assert "RTPExtension" not in parsed
+
+#= Test snmpwalk()
+#
+#~ netaccess
+#def test_snmpwalk(dst):
+#    with ContextManagerCaptureOutput() as cmco:
+#        snmpwalk(dst=dst)
+#        output = cmco.get_output()
+#    expected = "No answers\n"
+#    assert(output == expected)
+#
+#test_snmpwalk("secdev.org")
