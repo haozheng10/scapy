@@ -1,6 +1,6 @@
-## This file is part of Scapy
-## Copyright (C) 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 SSLv2 handshake fields & logic.
@@ -26,13 +26,13 @@ from scapy.layers.tls.crypto.suites import (_tls_cipher_suites,
 
 
 ###############################################################################
-### Generic SSLv2 Handshake message                                         ###
+#   Generic SSLv2 Handshake message                                           #
 ###############################################################################
 
-_sslv2_handshake_type = {0: "error",                1: "client_hello",
-                         2: "client_master_key",    3: "client_finished",
-                         4: "server_hello",         5: "server_verify",
-                         6: "server_finished",      7: "request_certificate",
+_sslv2_handshake_type = {0: "error", 1: "client_hello",
+                         2: "client_master_key", 3: "client_finished",
+                         4: "server_hello", 5: "server_verify",
+                         6: "server_finished", 7: "request_certificate",
                          8: "client_certificate"}
 
 
@@ -56,11 +56,11 @@ class _SSLv2Handshake(_GenericTLSSessionInheritance):
 
 
 ###############################################################################
-### Error                                                                   ###
+#   Error                                                                     #
 ###############################################################################
 
-_tls_error_code = {1: "no_cipher",         2: "no_certificate",
-                   4: "bad_certificate",   6: "unsupported_certificate_type"}
+_tls_error_code = {1: "no_cipher", 2: "no_certificate",
+                   4: "bad_certificate", 6: "unsupported_certificate_type"}
 
 
 class SSLv2Error(_SSLv2Handshake):
@@ -73,7 +73,7 @@ class SSLv2Error(_SSLv2Handshake):
 
 
 ###############################################################################
-### ClientHello                                                             ###
+#   ClientHello                                                               #
 ###############################################################################
 
 class _SSLv2CipherSuitesField(_CipherSuitesField):
@@ -129,7 +129,7 @@ class SSLv2ClientHello(_SSLv2Handshake):
 
 
 ###############################################################################
-### ServerHello                                                             ###
+#   ServerHello                                                               #
 ###############################################################################
 
 class _SSLv2CertDataField(StrLenField):
@@ -196,7 +196,7 @@ class SSLv2ServerHello(_SSLv2Handshake):
 
 
 ###############################################################################
-### ClientMasterKey                                                         ###
+#   ClientMasterKey                                                           #
 ###############################################################################
 
 class _SSLv2CipherSuiteField(EnumField):
@@ -268,7 +268,7 @@ class SSLv2ClientMasterKey(_SSLv2Handshake):
         clearkeylen = struct.unpack("!H", s[4:6])[0]
         encryptedkeylen = struct.unpack("!H", s[6:8])[0]
         encryptedkeystart = 10 + clearkeylen
-        encryptedkey = s[encryptedkeystart:encryptedkeystart+encryptedkeylen]
+        encryptedkey = s[encryptedkeystart:encryptedkeystart + encryptedkeylen]
         if self.tls_session.server_rsa_key:
             self.decryptedkey = \
                 self.tls_session.server_rsa_key.decrypt(encryptedkey)
@@ -286,7 +286,7 @@ class SSLv2ClientMasterKey(_SSLv2Handshake):
                 cs_val = 0x0700c0
                 cipher = b"\x07\x00\xc0"
             else:
-                cs_val = cs_vals[0]         #XXX choose the best one
+                cs_val = cs_vals[0]  # XXX choose the best one
                 cipher = struct.pack(">BH", cs_val >> 16, cs_val & 0x00ffff)
             cs_cls = _tls_cipher_suites_cls[cs_val]
             self.cipher = cs_val
@@ -378,7 +378,7 @@ class SSLv2ClientMasterKey(_SSLv2Handshake):
 
 
 ###############################################################################
-### ServerVerify                                                            ###
+#   ServerVerify                                                              #
 ###############################################################################
 
 class SSLv2ServerVerify(_SSLv2Handshake):
@@ -405,7 +405,7 @@ class SSLv2ServerVerify(_SSLv2Handshake):
 
 
 ###############################################################################
-### RequestCertificate                                                      ###
+#   RequestCertificate                                                        #
 ###############################################################################
 
 class SSLv2RequestCertificate(_SSLv2Handshake):
@@ -424,7 +424,7 @@ class SSLv2RequestCertificate(_SSLv2Handshake):
 
 
 ###############################################################################
-### ClientCertificate                                                       ###
+#   ClientCertificate                                                         #
 ###############################################################################
 
 class SSLv2ClientCertificate(_SSLv2Handshake):
@@ -487,7 +487,7 @@ class SSLv2ClientCertificate(_SSLv2Handshake):
 
 
 ###############################################################################
-### Finished                                                                ###
+#   Finished                                                                  #
 ###############################################################################
 
 class SSLv2ClientFinished(_SSLv2Handshake):
@@ -534,12 +534,12 @@ class SSLv2ServerFinished(_SSLv2Handshake):
 
 
 ###############################################################################
-### All handshake messages defined in this module                           ###
+#   All handshake messages defined in this module                             #
 ###############################################################################
 
-_sslv2_handshake_cls = {0: SSLv2Error,             1: SSLv2ClientHello,
-                        2: SSLv2ClientMasterKey,   3: SSLv2ClientFinished,
-                        4: SSLv2ServerHello,       5: SSLv2ServerVerify,
-                        6: SSLv2ServerFinished,    7: SSLv2RequestCertificate,
+_sslv2_handshake_cls = {0: SSLv2Error, 1: SSLv2ClientHello,
+                        2: SSLv2ClientMasterKey, 3: SSLv2ClientFinished,
+                        4: SSLv2ServerHello, 5: SSLv2ServerVerify,
+                        6: SSLv2ServerFinished, 7: SSLv2RequestCertificate,
                         8: SSLv2ClientCertificate}
 

@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2008 Arnaud Ebalard <arno@natisbad.org>
-##   2015, 2016, 2017 Maxence Tury <maxence.tury@ssi.gouv.fr>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2008 Arnaud Ebalard <arno@natisbad.org>
+#   2015, 2016, 2017 Maxence Tury <maxence.tury@ssi.gouv.fr>
+# This program is published under a GPLv2 license
 
 """
 PKCS #1 methods as defined in RFC 3447.
@@ -51,9 +51,9 @@ def pkcs_i2osp(n, sLen):
             sLen     intended length of the resulting octet string
     Output: s        corresponding octet string
     """
-    #if n >= 256**sLen:
+    # if n >= 256**sLen:
     #    raise Exception("Integer too large for provided sLen %d" % sLen)
-    fmt = "%%0%dx" % (2*sLen)
+    fmt = "%%0%dx" % (2 * sLen)
     return hex_bytes(fmt % n)
 
 
@@ -84,7 +84,7 @@ def _legacy_pkcs1_v1_5_encode_md5_sha1(M, emLen):
         warning("pkcs_emsa_pkcs1_v1_5_encode: "
                 "intended encoded message length too short")
         return None
-    PS = b'\xff'*(emLen - 36 - 3)
+    PS = b'\xff' * (emLen - 36 - 3)
     return b'\x00' + b'\x01' + PS + b'\x00' + H
 
 
@@ -104,12 +104,12 @@ if conf.crypto_valid:
 
     _hashes = {
         "md5": hashes.MD5,
-            "sha1": hashes.SHA1,
-            "sha224": hashes.SHA224,
-            "sha256": hashes.SHA256,
-            "sha384": hashes.SHA384,
-            "sha512": hashes.SHA512,
-            "md5-sha1": MD5_SHA1
+        "sha1": hashes.SHA1,
+        "sha224": hashes.SHA224,
+        "sha256": hashes.SHA256,
+        "sha384": hashes.SHA384,
+        "sha512": hashes.SHA512,
+        "md5-sha1": MD5_SHA1
     }
 
     def _get_hash(hashStr):
@@ -174,7 +174,7 @@ class _EncryptAndVerifyRSA(object):
         n = self._modulus
         if isinstance(s, int) and six.PY2:
             s = long(s)
-        if (six.PY2 and not isinstance(s, long)) or s > n-1:
+        if (six.PY2 and not isinstance(s, long)) or s > n - 1:
             warning("Key._rsaep() expects a long between 0 and n-1")
             return None
         m = pow(s, self._pubExp, n)
@@ -219,7 +219,7 @@ class _DecryptAndSignRSA(object):
         n = self._modulus
         if isinstance(m, int) and six.PY2:
             m = long(m)
-        if (six.PY2 and not isinstance(m, long)) or m > n-1:
+        if (six.PY2 and not isinstance(m, long)) or m > n - 1:
             warning("Key._rsaep() expects a long between 0 and n-1")
             return None
         privExp = self.key.private_numbers().d

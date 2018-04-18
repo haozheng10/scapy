@@ -41,7 +41,7 @@ from scapy.modules.six.moves import range
 
 
 #####################################
-## PROFINET Real-Time Data Packets ##
+#  PROFINET Real-Time Data Packets  #
 #####################################
 
 class PNIORealTimeIOxS(Packet):
@@ -95,7 +95,7 @@ class PNIORealTimeRawData(Packet):
     def length(self):
         """Get the length of the raw data"""
         # Manage the length of the packet if a length is provided
-        return  self._config["length"]
+        return self._config["length"]
 
 
 # Make sure an IOPS follows a data
@@ -103,7 +103,7 @@ bind_layers(PNIORealTimeRawData, PNIORealTimeIOxS)
 
 
 ###############################
-## PROFINET Real-Time Fields ##
+#  PROFINET Real-Time Fields  #
 ###############################
 
 class LowerLayerBoundPacketListField(PacketListField):
@@ -136,7 +136,7 @@ class NotionalLenField(Field):
 
 
 ###############################
-## PNIORealTime Configuration #
+#  PNIORealTime Configuration #
 ###############################
 
 # conf.contribs["PNIO_RTC"] is a dict which contains data layout for each Ethernet
@@ -173,7 +173,7 @@ def pnio_get_config(pkt):
 
 
 ###############################
-## PROFINET Real-Time Packet ##
+#  PROFINET Real-Time Packet  #
 ###############################
 
 def _pnio_rtc_guess_payload_class(_pkt, _underlayer=None, *args, **kargs):
@@ -348,7 +348,7 @@ class PNIORealTime(Packet):
                 else:
                     succ_count = 0
             # PROFISafe profiles must end with at least 3 bytes of high entropy
-            if succ_count >= 3: # Possible profisafe CRC
+            if succ_count >= 3:  # Possible profisafe CRC
                 return (
                     start,
                     Profisafe,
@@ -370,7 +370,7 @@ class PNIORealTime(Packet):
         # Retrieve the entropy of each data byte, for each communication
         entropies = {}
         for comm in locations:
-            if len(locations[comm]) > 0: # Doesn't append empty data
+            if len(locations[comm]) > 0:  # Doesn't append empty data
                 entropies[comm] = []
                 comm_packets = []
 
@@ -444,7 +444,7 @@ def entropy_of_byte(packets, position):
     return entropy
 
 ###############
-## PROFISafe ##
+#  PROFISafe  #
 ###############
 
 
@@ -460,12 +460,12 @@ class XVarBytesField(XByteField):
 
     def addfield(self, pkt, s, val):
         length = self.length_from(pkt)
-        return s + struct.pack(self.fmt, self.i2m(pkt, val))[8-length:]
+        return s + struct.pack(self.fmt, self.i2m(pkt, val))[8 - length:]
 
     def getfield(self, pkt, s):
         length = self.length_from(pkt)
-        val = struct.unpack(self.fmt, b"\x00"*(8 - length) + s[:length])[0]
-        return  s[length:], self.m2i(pkt, val)
+        val = struct.unpack(self.fmt, b"\x00" * (8 - length) + s[:length])[0]
+        return s[length:], self.m2i(pkt, val)
 
 
 class Profisafe(PNIORealTimeRawData):
@@ -484,7 +484,7 @@ class Profisafe(PNIORealTimeRawData):
     def data_length(self):
         """Return the length of the data"""
         ret = self.length() - self.crc_length() - 1
-        return  ret
+        return ret
 
     def crc_length(self):
         """Return the length of the crc"""

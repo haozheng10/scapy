@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##               2015, 2016, 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016, 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 TLS cipher suites.
@@ -100,18 +100,18 @@ class _GenericCipherSuiteMetaclass(type):
                 dct["hash_alg"] = h
 
                 if not tls1_3:
-                    kb_len = 2*c.key_len
+                    kb_len = 2 * c.key_len
 
                     if c.type == "stream" or c.type == "block":
-                        kb_len += 2*hm.key_len
+                        kb_len += 2 * hm.key_len
 
                     kb_len_v1_0 = kb_len
                     if c.type == "block":
-                        kb_len_v1_0 += 2*c.block_size
+                        kb_len_v1_0 += 2 * c.block_size
                         # no explicit IVs added for TLS 1.1+
                     elif c.type == "aead":
-                        kb_len_v1_0 += 2*c.fixed_iv_len
-                        kb_len += 2*c.fixed_iv_len
+                        kb_len_v1_0 += 2 * c.fixed_iv_len
+                        kb_len += 2 * c.fixed_iv_len
 
                     dct["_key_block_len_v1_0"] = kb_len_v1_0
                     dct["key_block_len"] = kb_len
@@ -710,10 +710,10 @@ class TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256(_GenericCipherSuite):
 class TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA256(_GenericCipherSuite):
     val = 0x00C5
 
-#class TLS_EMPTY_RENEGOTIATION_INFO_CSV(_GenericCipherSuite):
+# class TLS_EMPTY_RENEGOTIATION_INFO_CSV(_GenericCipherSuite):
 #    val = 0x00FF
 
-#class TLS_FALLBACK_SCSV(_GenericCipherSuite):
+# class TLS_FALLBACK_SCSV(_GenericCipherSuite):
 #    val = 0x5600
 
 
@@ -1310,7 +1310,7 @@ def get_usable_ciphersuites(l, kx):
         if c in _tls_cipher_suites_cls:
             ciph = _tls_cipher_suites_cls[c]
             if ciph.usable:
-                #XXX select among RSA and ECDSA cipher suites
+                # XXX select among RSA and ECDSA cipher suites
                 # according to the key(s) the server was given
                 if ciph.kx_alg.anonymous or kx in ciph.kx_alg.name:
                     res.append(c)

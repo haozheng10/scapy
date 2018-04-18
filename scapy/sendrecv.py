@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Functions to send and receive packets.
@@ -33,18 +33,18 @@ if conf.route is None:
 from scapy.supersocket import SuperSocket
 
 #################
-## Debug class ##
+#  Debug class  #
 #################
 
 
 class debug:
-    recv=[]
-    sent=[]
-    match=[]
+    recv = []
+    sent = []
+    match = []
 
 
 ####################
-## Send / Receive ##
+#  Send / Receive  #
 ####################
 
 
@@ -238,8 +238,8 @@ def sndrcv(pks, pkt, timeout=None, inter=0, verbose=None, chainCC=False,
         retry -= 1
 
     if conf.debug_match:
-        debug.sent=plist.PacketList(remain[:], "Sent")
-        debug.match=plist.SndRcvList(ans[:])
+        debug.sent = plist.PacketList(remain[:], "Sent")
+        debug.match = plist.SndRcvList(ans[:])
 
     # Clean the ans list to delete the field _answered
     if multi:
@@ -248,7 +248,7 @@ def sndrcv(pks, pkt, timeout=None, inter=0, verbose=None, chainCC=False,
                 del snd._answered
 
     if verbose:
-        print("\nReceived %i packets, got %i answers, remaining %i packets" % (nbrecv+len(ans), len(ans), notans))
+        print("\nReceived %i packets, got %i answers, remaining %i packets" % (nbrecv + len(ans), len(ans), notans))
     return plist.SndRcvList(ans), plist.PacketList(remain, "Unanswered")
 
 
@@ -273,11 +273,11 @@ def __gen_send(s, x, inter=0, loop=0, count=None, verbose=None, realtime=None, r
                 if realtime:
                     ct = time.time()
                     if dt0:
-                        st = dt0+p.time-ct
+                        st = dt0 + p.time - ct
                         if st > 0:
                             time.sleep(st)
                     else:
-                        dt0 = ct-p.time
+                        dt0 = ct - p.time
                 s.send(p)
                 if return_packets:
                     sent_packets.append(p)
@@ -396,7 +396,7 @@ filter:   provide a BPF filter
 iface:    listen answers only on the given interface"""
     if "timeout" not in kargs:
         kargs["timeout"] = -1
-    s=conf.L3socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
+    s = conf.L3socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
     ans, _ = sndrcv(s, x, *args, **kargs)
     s.close()
     if len(ans) > 0:
@@ -455,10 +455,10 @@ def __sr_loop(srfunc, pkts, prn=lambda x: x[1].summary(), prnfail=lambda x: x.su
     if verbose is None:
         verbose = conf.verb
     parity = 0
-    ans=[]
-    unans=[]
+    ans = []
+    unans = []
     if timeout is None:
-        timeout = min(2*inter, 5)
+        timeout = min(2 * inter, 5)
     try:
         while True:
             parity ^= 1
@@ -471,33 +471,33 @@ def __sr_loop(srfunc, pkts, prn=lambda x: x[1].summary(), prnfail=lambda x: x.su
             if verbose > 1:
                 print("\rsend...\r", end=' ')
             res = srfunc(pkts, timeout=timeout, verbose=0, chainCC=True, *args, **kargs)
-            n += len(res[0])+len(res[1])
+            n += len(res[0]) + len(res[1])
             r += len(res[0])
             if verbose > 1 and prn and len(res[0]) > 0:
                 msg = "RECV %i:" % len(res[0])
-                print("\r"+ct.success(msg), end=' ')
+                print("\r" + ct.success(msg), end=' ')
                 for p in res[0]:
                     print(col(prn(p)))
-                    print(" "*len(msg), end=' ')
+                    print(" " * len(msg), end=' ')
             if verbose > 1 and prnfail and len(res[1]) > 0:
                 msg = "fail %i:" % len(res[1])
-                print("\r"+ct.fail(msg), end=' ')
+                print("\r" + ct.fail(msg), end=' ')
                 for p in res[1]:
                     print(col(prnfail(p)))
-                    print(" "*len(msg), end=' ')
+                    print(" " * len(msg), end=' ')
             if verbose > 1 and not (prn or prnfail):
                 print("recv:%i  fail:%i" % tuple(map(len, res[:2])))
             if store:
                 ans += res[0]
                 unans += res[1]
-            end=time.time()
-            if end-start < inter:
-                time.sleep(inter+start-end)
+            end = time.time()
+            if end - start < inter:
+                time.sleep(inter + start - end)
     except KeyboardInterrupt:
         pass
 
-    if verbose and n>0:
-        print(ct.normal("\nSent %i packets, received %i packets. %3.1f%% hits." % (n, r, 100.0*r/n)))
+    if verbose and n > 0:
+        print(ct.normal("\nSent %i packets, received %i packets. %3.1f%% hits." % (n, r, 100.0 * r / n)))
     return plist.SndRcvList(ans), plist.PacketList(unans)
 
 
@@ -564,7 +564,7 @@ def sndrcvflood(pks, pkt, inter=0, verbose=None, chainCC=False, prn=lambda x: x)
     remain = list(itertools.chain(*six.itervalues(hsent)))
 
     if verbose:
-        print("\nReceived %i packets, got %i answers, remaining %i packets. Sent a total of %i packets." % (nbrecv+len(ans), len(ans), notans, count_packets.qsize()))
+        print("\nReceived %i packets, got %i answers, remaining %i packets. Sent a total of %i packets." % (nbrecv + len(ans), len(ans), notans, count_packets.qsize()))
     count_packets.empty()
     del count_packets
 
@@ -580,7 +580,7 @@ nofilter: put 1 to avoid use of BPF filters
 filter:   provide a BPF filter
 iface:    listen answers only on the given interface"""
     s = conf.L3socket(promisc=promisc, filter=filter, iface=iface, nofilter=nofilter)
-    r=sndrcvflood(s, x, *args, **kargs)
+    r = sndrcvflood(s, x, *args, **kargs)
     s.close()
     return r
 
@@ -593,7 +593,7 @@ verbose:  set verbosity level
 nofilter: put 1 to avoid use of BPF filters
 filter:   provide a BPF filter
 iface:    listen answers only on the given interface"""
-    s=conf.L3socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
+    s = conf.L3socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
     ans, _ = sndrcvflood(s, x, *args, **kargs)
     s.close()
     if len(ans) > 0:
@@ -613,7 +613,7 @@ iface:    listen answers only on the given interface"""
     if iface is None and iface_hint is not None:
         iface = conf.route.route(iface_hint)[0]
     s = conf.L2socket(promisc=promisc, filter=filter, iface=iface, nofilter=nofilter)
-    r=sndrcvflood(s, x, *args, **kargs)
+    r = sndrcvflood(s, x, *args, **kargs)
     s.close()
     return r
 
@@ -626,7 +626,7 @@ verbose:  set verbosity level
 nofilter: put 1 to avoid use of BPF filters
 filter:   provide a BPF filter
 iface:    listen answers only on the given interface"""
-    s=conf.L2socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
+    s = conf.L2socket(promisc=promisc, filter=filter, nofilter=nofilter, iface=iface)
     ans, _ = sndrcvflood(s, x, *args, **kargs)
     s.close()
     if len(ans) > 0:
@@ -642,69 +642,48 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
           L2socket=None, timeout=None, opened_socket=None,
           stop_filter=None, interpkt_timeout=None, iface=None, *arg, **karg):
     """
+    Sniff packets and return a list of packets.
 
-Sniff packets and return a list of packets.
+    Args:
+        count: number of packets to capture. 0 means infinity.
+        store: whether to store sniffed packets or discard them
+        prn: function to apply to each packet. If something is returned, it
+             is displayed.
+             --Ex: prn = lambda x: x.summary()
+        filter: BPF filter to apply.
+        lfilter: Python function applied to each packet to determine if
+                 further action may be done.
+                 --Ex: lfilter = lambda x: x.haslayer(Padding)
+        offline: PCAP file (or list of PCAP files) to read packets from,
+                 instead of sniffing them
+        timeout: stop sniffing after a given time (default: None).
+        L2socket: use the provided L2socket (default: use conf.L2listen).
+        opened_socket: provide an object (or a list of objects) ready to use
+                      .recv() on.
+        stop_filter: Python function applied to each packet to determine if
+                     we have to stop the capture after this packet.
+                     --Ex: stop_filter = lambda x: x.haslayer(TCP)
+        interpkt_timeout: a timeout in seconds, if the timeout passes since
+                          the most recent packet was received and no new packet
+                          is received, the sniff stops.
+        iface: interface or list of interfaces (default: None for sniffing
+               on all interfaces).
+        monitor: use monitor mode. May not be available on all OS
 
-Arguments:
+    The iface, offline and opened_socket parameters can be either an
+    element, a list of elements, or a dict object mapping an element to a
+    label (see examples below).
 
-  count: number of packets to capture. 0 means infinity.
-
-  store: whether to store sniffed packets or discard them
-
-  prn: function to apply to each packet. If something is returned, it
-      is displayed.
-
-      Ex: prn = lambda x: x.summary()
-
-  filter: BPF filter to apply.
-
-  lfilter: Python function applied to each packet to determine if
-      further action may be done.
-
-      Ex: lfilter = lambda x: x.haslayer(Padding)
-
-  offline: PCAP file (or list of PCAP files) to read packets from,
-      instead of sniffing them
-
-  timeout: stop sniffing after a given time (default: None).
-
-  L2socket: use the provided L2socket (default: use conf.L2listen).
-
-  opened_socket: provide an object (or a list of objects) ready to use
-      .recv() on.
-
-  stop_filter: Python function applied to each packet to determine if
-      we have to stop the capture after this packet.
-
-      Ex: stop_filter = lambda x: x.haslayer(TCP)
-
-  interpkt_timeout: a timeout in seconds, if the timeout passes since
-      the most recent packet was received and no new packet is received,
-      the sniff stops.
-
-  iface: interface or list of interfaces (default: None for sniffing
-      on all interfaces).
-
-The iface, offline and opened_socket parameters can be either an
-element, a list of elements, or a dict object mapping an element to a
-label (see examples below).
-
-Examples:
-
-  >>> sniff(filter="arp")
-
-  >>> sniff(lfilter=lambda pkt: ARP in pkt)
-
-  >>> sniff(iface="eth0", prn=Packet.summary)
-
-  >>> sniff(iface=["eth0", "mon0"],
-  ...       prn=lambda pkt: "%s: %s" % (pkt.sniffed_on,
-  ...                                   pkt.summary()))
-
-  >>> sniff(iface={"eth0": "Ethernet", "mon0": "Wifi"},
-  ...       prn=lambda pkt: "%s: %s" % (pkt.sniffed_on,
-  ...                                   pkt.summary()))
-
+    Examples:
+      >>> sniff(filter="arp")
+      >>> sniff(lfilter=lambda pkt: ARP in pkt)
+      >>> sniff(iface="eth0", prn=Packet.summary)
+      >>> sniff(iface=["eth0", "mon0"],
+      ...       prn=lambda pkt: "%s: %s" % (pkt.sniffed_on,
+      ...                                   pkt.summary()))
+      >>> sniff(iface={"eth0": "Ethernet", "mon0": "Wifi"},
+      ...       prn=lambda pkt: "%s: %s" % (pkt.sniffed_on,
+      ...                                   pkt.summary()))
     """
     c = 0
     sniff_sockets = {}  # socket: label dict
@@ -752,9 +731,9 @@ Examples:
                                    *arg, **karg)] = iface
     lst = []
     if timeout is not None:
-        stoptime = time.time()+timeout
+        stoptime = time.time() + timeout
     if interpkt_timeout is not None:
-        interpkt_stoptime = time.time()+interpkt_timeout
+        interpkt_stoptime = time.time() + interpkt_timeout
     remain = None
     read_allowed_exceptions = ()
     if conf.use_bpf:
@@ -783,7 +762,7 @@ Examples:
     try:
         while sniff_sockets:
             if timeout is not None:
-                remain = stoptime-time.time()
+                remain = stoptime - time.time()
                 if remain <= 0:
                     break
             if interpkt_timeout is not None:

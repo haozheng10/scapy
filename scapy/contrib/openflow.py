@@ -1,12 +1,12 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more information
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more information
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
-## Copyright (C) 2014 Maxence Tury <maxence.tury@ssi.gouv.fr>
-## OpenFlow is an open standard used in SDN deployments.
-## Based on OpenFlow v1.0.1
-## Specifications can be retrieved from https://www.opennetworking.org/
+# Copyright (C) 2014 Maxence Tury <maxence.tury@ssi.gouv.fr>
+# OpenFlow is an open standard used in SDN deployments.
+# Based on OpenFlow v1.0.1
+# Specifications can be retrieved from https://www.opennetworking.org/
 
 # scapy.contrib.description = Openflow v1.0
 # scapy.contrib.status = loads
@@ -18,12 +18,12 @@ from scapy.layers.l2 import *
 from scapy.layers.inet import *
 from scapy.compat import orb, raw
 
-### If prereq_autocomplete is True then match prerequisites will be
-### automatically handled. See OFPMatch class.
+# If prereq_autocomplete is True then match prerequisites will be
+# automatically handled. See OFPMatch class.
 conf.contribs['OPENFLOW'] = {'prereq_autocomplete': True}
 
 #####################################################
-################# Predefined values #################
+#                 Predefined values                 #
 #####################################################
 
 ofp_port_no = {0xfff8: "IN_PORT",
@@ -44,14 +44,14 @@ ofp_buffer = {0xffffffff: "NO_BUFFER"}
 ofp_max_len = {0xffff: "NO_BUFFER"}
 
 #####################################################
-################# Common structures #################
+#                 Common structures                 #
 #####################################################
 
-### The following structures will be used in different types
-### of OpenFlow messages: ports, matches, actions, queues.
+# The following structures will be used in different types
+# of OpenFlow messages: ports, matches, actions, queues.
 
 
-##################### Ports #####################
+#                     Ports                     #
 
 ofp_port_config = ["PORT_DOWN",
                    "NO_STP",
@@ -101,95 +101,95 @@ class OFPPhyPort(Packet):
 
 class OFPMatch(Packet):
     name = "OFP_MATCH"
-    fields_desc= [FlagsField("wildcards1", None, 12, ["DL_VLAN_PCP",
-                                                      "NW_TOS"]),
-                  BitField("nw_dst_mask", None, 6),
-                  BitField("nw_src_mask", None, 6),
-                  FlagsField("wildcards2", None, 8, ["IN_PORT",
-                                                     "DL_VLAN",
-                                                     "DL_SRC",
-                                                     "DL_DST",
-                                                     "DL_TYPE",
-                                                     "NW_PROTO",
-                                                     "TP_SRC",
-                                                     "TP_DST"]),
-                  ShortEnumField("in_port", None, ofp_port_no),
-                  MACField("dl_src", None),
-                  MACField("dl_dst", None),
-                  ShortField("dl_vlan", None),
-                  ByteField("dl_vlan_pcp", None),
-                  XByteField("pad1", None),
-                  ShortField("dl_type", None),
-                  ByteField("nw_tos", None),
-                  ByteField("nw_proto", None),
-                  XShortField("pad2", None),
-                  IPField("nw_src", "0"),
-                  IPField("nw_dst", "0"),
-                  ShortField("tp_src", None),
-                  ShortField("tp_dst", None)]
+    fields_desc = [FlagsField("wildcards1", None, 12, ["DL_VLAN_PCP",
+                                                       "NW_TOS"]),
+                   BitField("nw_dst_mask", None, 6),
+                   BitField("nw_src_mask", None, 6),
+                   FlagsField("wildcards2", None, 8, ["IN_PORT",
+                                                      "DL_VLAN",
+                                                      "DL_SRC",
+                                                      "DL_DST",
+                                                      "DL_TYPE",
+                                                      "NW_PROTO",
+                                                      "TP_SRC",
+                                                      "TP_DST"]),
+                   ShortEnumField("in_port", None, ofp_port_no),
+                   MACField("dl_src", None),
+                   MACField("dl_dst", None),
+                   ShortField("dl_vlan", None),
+                   ByteField("dl_vlan_pcp", None),
+                   XByteField("pad1", None),
+                   ShortField("dl_type", None),
+                   ByteField("nw_tos", None),
+                   ByteField("nw_proto", None),
+                   XShortField("pad2", None),
+                   IPField("nw_src", "0"),
+                   IPField("nw_dst", "0"),
+                   ShortField("tp_src", None),
+                   ShortField("tp_dst", None)]
 
     def extract_padding(self, s):
         return b"", s
 
-    ### with post_build we create the wildcards field bit by bit
+    # with post_build we create the wildcards field bit by bit
     def post_build(self, p, pay):
         # first 10 bits of an ofp_match are always set to 0
-        l = "0"*10
+        l = "0" * 10
 
         # when one field has not been declared, it is assumed to be wildcarded
         if self.wildcards1 is None:
-            if self.nw_tos is None: l+="1"
-            else: l+="0"
-            if self.dl_vlan_pcp is None: l+="1"
-            else: l+="0"
+            if self.nw_tos is None: l += "1"
+            else: l += "0"
+            if self.dl_vlan_pcp is None: l += "1"
+            else: l += "0"
         else:
             w1 = binrepr(self.wildcards1)
-            l+="0"*(2-len(w1))
-            l+=w1
+            l += "0" * (2 - len(w1))
+            l += w1
 
         # ip masks use 6 bits each
         if self.nw_dst_mask is None:
-            if self.nw_dst is "0": l+="111111"
+            if self.nw_dst is "0": l += "111111"
             # 0x100000 would be ok too (32-bit IP mask)
-            else: l+="0"*6
+            else: l += "0" * 6
         else:
             m1 = binrepr(self.nw_dst_mask)
-            l+="0"*(6-len(m1))
-            l+=m1
+            l += "0" * (6 - len(m1))
+            l += m1
         if self.nw_src_mask is None:
-            if self.nw_src is "0": l+="111111"
-            else: l+="0"*6
+            if self.nw_src is "0": l += "111111"
+            else: l += "0" * 6
         else:
             m2 = binrepr(self.nw_src_mask)
-            l+="0"*(6-len(m2))
-            l+=m2
+            l += "0" * (6 - len(m2))
+            l += m2
 
         # wildcards2 works the same way as wildcards1
         if self.wildcards2 is None:
-            if self.tp_dst is None: l+="1"
-            else: l+="0"
-            if self.tp_src is None: l+="1"
-            else: l+="0"
-            if self.nw_proto is None: l+="1"
-            else: l+="0"
-            if self.dl_type is None: l+="1"
-            else: l+="0"
-            if self.dl_dst is None: l+="1"
-            else: l+="0"
-            if self.dl_src is None: l+="1"
-            else: l+="0"
-            if self.dl_vlan is None: l+="1"
-            else: l+="0"
-            if self.in_port is None: l+="1"
-            else: l+="0"
+            if self.tp_dst is None: l += "1"
+            else: l += "0"
+            if self.tp_src is None: l += "1"
+            else: l += "0"
+            if self.nw_proto is None: l += "1"
+            else: l += "0"
+            if self.dl_type is None: l += "1"
+            else: l += "0"
+            if self.dl_dst is None: l += "1"
+            else: l += "0"
+            if self.dl_src is None: l += "1"
+            else: l += "0"
+            if self.dl_vlan is None: l += "1"
+            else: l += "0"
+            if self.in_port is None: l += "1"
+            else: l += "0"
         else:
             w2 = binrepr(self.wildcards2)
-            l+="0"*(8-len(w2))
-            l+=w2
+            l += "0" * (8 - len(w2))
+            l += w2
 
-        ### In order to write OFPMatch compliant with the specifications,
-        ### if prereq_autocomplete has been set to True
-        ### we assume ethertype=IP or nwproto=TCP when appropriate subfields are provided.
+        # In order to write OFPMatch compliant with the specifications,
+        # if prereq_autocomplete has been set to True
+        # we assume ethertype=IP or nwproto=TCP when appropriate subfields are provided.
         if conf.contribs['OPENFLOW']['prereq_autocomplete']:
             if self.dl_type is None:
                 if self.nw_src is not "0" or self.nw_dst is not "0" or self.nw_proto is not None or self.nw_tos is not None:
@@ -202,19 +202,19 @@ class OFPMatch(Packet):
                     p = p[:25] + struct.pack("!B", 0x06) + p[26:]
                     l = l[:-6] + "0" + l[-5:]
 
-        ins = b"".join(chb(int("".join(x), 2)) for x in zip(*[iter(l)]*8))
+        ins = b"".join(chb(int("".join(x), 2)) for x in zip(*[iter(l)] * 8))
         p = ins + p[4:]
         return p + pay
 
 
-###################### Actions ######################
+#                      Actions                      #
 
 class _ofp_action_header(Packet):
     name = "Dummy OpenFlow Action Header"
 
     def post_build(self, p, pay):
         if self.len is None:
-            l = len(p)+len(pay)
+            l = len(p) + len(pay)
             p = p[:2] + struct.pack("!H", l) + p[4:]
         return p + pay
 
@@ -373,14 +373,14 @@ class ActionPacketListField(PacketListField):
         return remain, lst
 
 
-####################### Queues ######################
+#                       Queues                      #
 
 class _ofp_queue_property_header(Packet):
     name = "Dummy OpenFlow Queue Property Header"
 
     def post_build(self, p, pay):
         if self.len is None:
-            l = len(p)+len(pay)
+            l = len(p) + len(pay)
             p = p[:2] + struct.pack("!H", l) + p[4:]
         return p + pay
 
@@ -443,7 +443,7 @@ class OFPPacketQueue(Packet):
         if self.properties == []:
             p += raw(OFPQTNone())
         if self.len is None:
-            l = len(p)+len(pay)
+            l = len(p) + len(pay)
             p = p[:4] + struct.pack("!H", l) + p[6:]
         return p + pay
 
@@ -452,7 +452,7 @@ class OFPPacketQueue(Packet):
                    ShortField("len", None),
                    XShortField("pad", 0),
                    QueuePropertyPacketListField("properties", [], Packet,
-                                                length_from=lambda pkt:pkt.len-8)]
+                                                length_from=lambda pkt:pkt.len - 8)]
 
 
 class QueuePacketListField(PacketListField):
@@ -478,7 +478,7 @@ class QueuePacketListField(PacketListField):
 
 
 #####################################################
-############## OpenFlow 1.0 Messages ################
+#              OpenFlow 1.0 Messages                #
 #####################################################
 
 class _ofp_header(Packet):
@@ -486,7 +486,7 @@ class _ofp_header(Packet):
 
     def post_build(self, p, pay):
         if self.len is None:
-            l = len(p)+len(pay)
+            l = len(p) + len(pay)
             p = p[:2] + struct.pack("!H", l) + p[4:]
         return p + pay
 
@@ -530,11 +530,11 @@ class OFPTHello(_ofp_header):
     overload_fields = {TCP: {"sport": 6653}}
 
 #####################################################
-#################### OFPT_ERROR #####################
+#                    OFPT_ERROR                     #
 #####################################################
 
-### this class will be used to display some messages
-### sent back by the switch after an error
+# this class will be used to display some messages
+# sent back by the switch after an error
 
 
 class OFPacketField(PacketField):
@@ -662,7 +662,7 @@ ofp_error_cls = {0: OFPETHelloFailed,
                  4: OFPETPortModFailed,
                  5: OFPETQueueOpFailed}
 
-################ end of OFPT_ERRORS #################
+#                end of OFPT_ERRORS                 #
 
 
 class OFPTEchoRequest(_ofp_header):
@@ -725,7 +725,7 @@ class OFPTFeaturesReply(_ofp_header):
                                                       "ARP_MATCH_IP"]),
                    FlagsField("actions", 0, 32, ofp_action_types_flags),
                    PacketListField("ports", None, OFPPhyPort,
-                                   length_from=lambda pkt:pkt.len-32)]
+                                   length_from=lambda pkt:pkt.len - 32)]
     overload_fields = {TCP: {"dport": 6653}}
 
 
@@ -855,7 +855,7 @@ class OFPTFlowMod(_ofp_header):
                                                "CHECK_OVERLAP",
                                                "EMERG"]),
                    ActionPacketListField("actions", [], Packet,
-                                         length_from=lambda pkt:pkt.len-72)]
+                                         length_from=lambda pkt:pkt.len - 72)]
     overload_fields = {TCP: {"sport": 6653}}
 
 
@@ -874,7 +874,7 @@ class OFPTPortMod(_ofp_header):
     overload_fields = {TCP: {"sport": 6653}}
 
 #####################################################
-##################### OFPT_STATS ####################
+#                     OFPT_STATS                    #
 #####################################################
 
 
@@ -933,7 +933,7 @@ class OFPFlowStats(Packet):
 
     def post_build(self, p, pay):
         if self.length is None:
-            l = len(p)+len(pay)
+            l = len(p) + len(pay)
             p = struct.pack("!H", l) + p[2:]
         return p + pay
 
@@ -952,7 +952,7 @@ class OFPFlowStats(Packet):
                    LongField("packet_count", 0),
                    LongField("byte_count", 0),
                    ActionPacketListField("actions", [], Packet,
-                                         length_from=lambda pkt:pkt.length-88)]
+                                         length_from=lambda pkt:pkt.length - 88)]
 
 
 class FlowStatsPacketListField(PacketListField):
@@ -984,7 +984,7 @@ class OFPTStatsReplyFlow(_ofp_header):
                    ShortEnumField("stats_type", 1, ofp_stats_types),
                    FlagsField("flags", 0, 16, []),
                    FlowStatsPacketListField("flow_stats", [], Packet,
-                                            length_from=lambda pkt:pkt.len-12)]
+                                            length_from=lambda pkt:pkt.len - 12)]
     overload_fields = {TCP: {"dport": 6653}}
 
 
@@ -1065,7 +1065,7 @@ class OFPTStatsReplyTable(_ofp_header):
                    ShortEnumField("stats_type", 3, ofp_stats_types),
                    FlagsField("flags", 0, 16, []),
                    PacketListField("table_stats", None, OFPTableStats,
-                                   length_from=lambda pkt:pkt.len-12)]
+                                   length_from=lambda pkt:pkt.len - 12)]
     overload_fields = {TCP: {"dport": 6653}}
 
 
@@ -1113,7 +1113,7 @@ class OFPTStatsReplyPort(_ofp_header):
                    ShortEnumField("stats_type", 4, ofp_stats_types),
                    FlagsField("flags", 0, 16, []),
                    PacketListField("port_stats", None, OFPPortStats,
-                                   length_from=lambda pkt:pkt.len-12)]
+                                   length_from=lambda pkt:pkt.len - 12)]
     overload_fields = {TCP: {"dport": 6653}}
 
 
@@ -1190,7 +1190,7 @@ ofp_stats_reply_cls = {0: OFPTStatsReplyDesc,
                        5: OFPTStatsReplyQueue,
                        65535: OFPTStatsReplyVendor}
 
-################ end of OFPT_STATS ##################
+#                end of OFPT_STATS                  #
 
 
 class OFPTBarrierRequest(_ofp_header):
@@ -1231,13 +1231,13 @@ class OFPTQueueGetConfigReply(_ofp_header):
                    ShortEnumField("port", 0, ofp_port_no),
                    XBitField("pad", 0, 48),
                    QueuePacketListField("queues", [], Packet,
-                                        length_from=lambda pkt:pkt.len-16)]
+                                        length_from=lambda pkt:pkt.len - 16)]
     overload_fields = {TCP: {"dport": 6653}}
 
 
 # ofpt_cls allows generic method OpenFlow() to choose the right class for dissection
 ofpt_cls = {0: OFPTHello,
-            #1: OFPTError,
+            # 1: OFPTError,
             2: OFPTEchoRequest,
             3: OFPTEchoReply,
             4: OFPTVendor,
@@ -1252,8 +1252,8 @@ ofpt_cls = {0: OFPTHello,
             13: OFPTPacketOut,
             14: OFPTFlowMod,
             15: OFPTPortMod,
-            #16: OFPTStatsRequest,
-            #17: OFPTStatsReply,
+            # 16: OFPTStatsRequest,
+            # 17: OFPTStatsReply,
             18: OFPTBarrierRequest,
             19: OFPTBarrierReply,
             20: OFPTQueueGetConfigRequest,
@@ -1264,8 +1264,8 @@ TCP_guess_payload_class_copy = TCP.guess_payload_class
 
 def OpenFlow(self, payload):
     if self is None or self.dport == 6653 or self.dport == 6633 or self.sport == 6653 or self.sport == 6633:
-    # port 6653 has been allocated by IANA, port 6633 should no longer be used
-    # OpenFlow function may be called with None self in OFPPacketField
+        # port 6653 has been allocated by IANA, port 6633 should no longer be used
+        # OpenFlow function may be called with None self in OFPPacketField
         of_type = orb(payload[1])
         if of_type == 1:
             err_type = orb(payload[9])

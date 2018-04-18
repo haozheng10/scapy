@@ -1,4 +1,4 @@
-## RSVP layer
+# RSVP layer
 
 # This file is part of Scapy
 # Scapy is free software: you can redistribute it and/or modify
@@ -46,10 +46,10 @@ class RSVP(Packet):
         p += pay
         if self.Length is None:
             l = len(p)
-            p = p[:6]+chb((l>>8)&0xff)+chb(l&0xff)+p[8:]
+            p = p[:6] + chb((l >> 8) & 0xff) + chb(l & 0xff) + p[8:]
         if self.chksum is None:
             ck = checksum(p)
-            p = p[:2]+chb(ck>>8)+chb(ck&0xff)+p[4:]
+            p = p[:2] + chb(ck >> 8) + chb(ck & 0xff) + p[4:]
         return p
 
 
@@ -59,10 +59,10 @@ rsvptypes = {0x01: "Session",
              0x05: "TIME_VALUES",
              0x06: "ERROR_SPEC",
              0x07: "SCOPE",
-             0x08:  "STYLE",
-             0x09:  "FLOWSPEC",
-             0x0A:  "FILTER_SPEC",
-             0x0B:  "SENDER_TEMPLATE",
+             0x08: "STYLE",
+             0x09: "FLOWSPEC",
+             0x0A: "FILTER_SPEC",
+             0x0B: "SENDER_TEMPLATE",
              0x0C: "SENDER_TSPEC",
              0x0D: "ADSPEC",
              0x0E: "POLICY_DATA",
@@ -155,10 +155,10 @@ class RSVP_Object(Packet):
 class RSVP_Data(Packet):
     name = "Data"
     overload_fields = {RSVP_Object: {"Class": 0x01}}
-    fields_desc = [StrLenField("Data", "", length_from= lambda pkt:pkt.underlayer.Length - 4)]
+    fields_desc = [StrLenField("Data", "", length_from=lambda pkt:pkt.underlayer.Length - 4)]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
 class RSVP_HOP(Packet):
@@ -168,7 +168,7 @@ class RSVP_HOP(Packet):
                    BitField("inface", 1, 32)]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
 class RSVP_Time(Packet):
@@ -177,7 +177,7 @@ class RSVP_Time(Packet):
     fields_desc = [BitField("refresh", 1, 32)]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
 class RSVP_SenderTSPEC(Packet):
@@ -189,10 +189,10 @@ class RSVP_SenderTSPEC(Packet):
                    ByteField("Srv_hdr", 1),
                    ByteField("reserve2", 0),
                    ShortField("Srv_Length", 4),
-                   StrLenField("Tokens", "", length_from= lambda pkt:pkt.underlayer.Length - 12)]
+                   StrLenField("Tokens", "", length_from=lambda pkt:pkt.underlayer.Length - 12)]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
 class RSVP_LabelReq(Packet):
@@ -202,7 +202,7 @@ class RSVP_LabelReq(Packet):
                    ShortField("L3PID", 1)]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
 class RSVP_SessionAttrb(Packet):
@@ -212,12 +212,12 @@ class RSVP_SessionAttrb(Packet):
                    ByteField("Hold_priority", 1),
                    ByteField("flags", 1),
                    FieldLenField("Name_length", None, length_of="Name"),
-                   StrLenField("Name", "", length_from= lambda pkt:pkt.Name_length),
+                   StrLenField("Name", "", length_from=lambda pkt:pkt.Name_length),
                    ]
 
     def default_payload_class(self, payload):
-      return RSVP_Object
+        return RSVP_Object
 
 
-bind_layers(IP,     RSVP,     {"proto": 46})
+bind_layers(IP, RSVP, {"proto": 46})
 bind_layers(RSVP, RSVP_Object)

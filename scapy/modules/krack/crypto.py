@@ -41,12 +41,12 @@ def customPRF512(key, amac, smac, anonce, snonce):
     B = "".join(sorted([amac, smac]) + sorted([anonce, snonce]))
 
     blen = 64
-    i    = 0
-    R    = ''
-    while i<=((blen*8+159)/160):
-        hmacsha1 = hmac.new(key, A+chr(0x00)+B+chr(i), hashlib.sha1)
-        i+=1
-        R = R+hmacsha1.digest()
+    i = 0
+    R = ''
+    while i <= ((blen * 8 + 159) / 160):
+        hmacsha1 = hmac.new(key, A + chr(0x00) + B + chr(i), hashlib.sha1)
+        i += 1
+        R = R + hmacsha1.digest()
     return R[:blen]
 
 # TKIP - WEPSeed generation
@@ -255,7 +255,7 @@ def michael(key, to_hash):
     l, r = unpack('<II', key)
     for i in range(nb_block + 2):
         # Convert i-th block to int
-        block_i = unpack('<I', data[i*4:i*4 + 4])[0]
+        block_i = unpack('<I', data[i * 4:i * 4 + 4])[0]
         l ^= block_i
         l, r = _michael_b(l, r)
     return pack('<II', l, r)
@@ -300,7 +300,7 @@ def build_TKIP_payload(data, iv, mac, tk):
         (iv >> 8) & 0xFF,
         iv & 0xFF
     )
-    bitfield = 1 << 5 # Extended IV
+    bitfield = 1 << 5  # Extended IV
     TKIP_hdr = chr(TSC1) + chr((TSC1 | 0x20) & 0x7f) + chr(TSC0) + chr(bitfield)
     TKIP_hdr += chr(TSC2) + chr(TSC3) + chr(TSC4) + chr(TSC5)
 
@@ -346,8 +346,8 @@ def check_MIC_ICV(data, mic_key, source, dest):
     if expected_ICV != ICV:
         raise ICVError()
 
-    sa = hex_bytes(source.replace(":", "")) # Source MAC
-    da = hex_bytes(dest.replace(":", "")) # Dest MAC
+    sa = hex_bytes(source.replace(":", ""))  # Source MAC
+    da = hex_bytes(dest.replace(":", ""))  # Dest MAC
 
     expected_MIC = michael(mic_key, da + sa + "\x00" + "\x00" * 3 + data_clear)
     if expected_MIC != MIC:
@@ -361,8 +361,8 @@ def build_MIC_ICV(data, mic_key, source, dest):
     # DATA - MIC(DA - SA - Priority=0 - 0 - 0 - 0 - DATA) - ICV
     # 802.11i p.47
 
-    sa = hex_bytes(source.replace(":", "")) # Source MAC
-    da = hex_bytes(dest.replace(":", "")) # Dest MAC
+    sa = hex_bytes(source.replace(":", ""))  # Source MAC
+    da = hex_bytes(dest.replace(":", ""))  # Dest MAC
     MIC = michael(mic_key, da + sa + "\x00" + "\x00" * 3 + data)
     ICV = pack("<I", crc32(data + MIC) & 0xFFFFFFFF)
 

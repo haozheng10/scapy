@@ -1,8 +1,8 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## Copyright (C) Gabriel Potter <gabriel@potter.fr>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# Copyright (C) Gabriel Potter <gabriel@potter.fr>
+# This program is published under a GPLv2 license
 
 """
 Customizations needed to support Microsoft Windows.
@@ -47,16 +47,16 @@ conf.use_winpcapy = True
 
 WINDOWS = (os.name == 'nt')
 
-#hot-patching socket for missing variables on Windows
+# hot-patching socket for missing variables on Windows
 import socket
 if not hasattr(socket, 'IPPROTO_IPIP'):
-    socket.IPPROTO_IPIP=4
+    socket.IPPROTO_IPIP = 4
 if not hasattr(socket, 'IPPROTO_AH'):
-    socket.IPPROTO_AH=51
+    socket.IPPROTO_AH = 51
 if not hasattr(socket, 'IPPROTO_ESP'):
-    socket.IPPROTO_ESP=50
+    socket.IPPROTO_ESP = 50
 if not hasattr(socket, 'IPPROTO_GRE'):
-    socket.IPPROTO_GRE=47
+    socket.IPPROTO_GRE = 47
 
 from scapy.arch import pcapdnet
 from scapy.arch.pcapdnet import *
@@ -80,10 +80,10 @@ def is_new_release(win10more=False):
             pass
     else:
         try:
-             if float(release) >= 8:
-                 return True
+            if float(release) >= 8:
+                return True
         except ValueError:
-            if (release=="post2008Server"):
+            if (release == "post2008Server"):
                 return True
     return False
 
@@ -230,12 +230,12 @@ def _exec_query_ps(cmd, fields):
     query_cmd = cmd + ['|', 'select %s' % ', '.join(fields),  # select fields
                        '|', 'fl',  # print as a list
                        '|', 'out-string', '-Width', '4096']  # do not crop
-    l=[]
+    l = []
     # Ask the powershell manager to process the query
     stdout = POWERSHELL_PROCESS.query(query_cmd)
     # Process stdout
     for line in stdout:
-        if not line.strip(): # skip empty lines
+        if not line.strip():  # skip empty lines
             continue
         sl = line.split(':', 1)
         if len(sl) == 1:
@@ -245,7 +245,7 @@ def _exec_query_ps(cmd, fields):
             l.append(sl[1].strip())
         if len(l) == len(fields):
             yield l
-            l=[]
+            l = []
 
 
 def _vbs_exec_code(code, split_tag="@"):
@@ -304,7 +304,7 @@ def _get_npcap_dot11_adapters():
 
 
 # Some names differ between VBS and PS
-## None: field will not be returned under VBS
+# None: field will not be returned under VBS
 _VBS_WMI_FIELDS = {
     "Win32_NetworkAdapter": {
         "InterfaceDescription": "Description",
@@ -407,7 +407,7 @@ def _where(filename, dirs=None, env="PATH"):
 
 def win_find_exe(filename, installsubdir=None, env="ProgramFiles"):
     """Find executable in current dir, system path or given ProgramFiles subdir"""
-    fns = [filename] if filename.endswith(".exe") else [filename+".exe", filename]
+    fns = [filename] if filename.endswith(".exe") else [filename + ".exe", filename]
     for fn in fns:
         try:
             if installsubdir is None:
@@ -449,7 +449,7 @@ class WinProgPath(ConfClass):
         self.cmd = win_find_exe("cmd", installsubdir="System32",
                                 env="SystemRoot")
         if self.wireshark:
-            manu_path = load_manuf(os.path.sep.join(self.wireshark.split(os.path.sep)[:-1])+os.path.sep+"manuf")
+            manu_path = load_manuf(os.path.sep.join(self.wireshark.split(os.path.sep)[:-1]) + os.path.sep + "manuf")
             scapy.data.MANUFDB = conf.manufdb = manu_path
 
         self.os_access = (self.powershell is not None) or (self.cscript is not None)
@@ -505,7 +505,7 @@ def get_windows_if_list():
         # Ethernet                  Killer E2200 Gigabit Ethernet Contro...      13 Up           D0-50-99-56-DD-F9         1 Gbps
         query = exec_query(['Get-NetAdapter'],
                            ['InterfaceDescription', 'InterfaceIndex', 'Name',
-                            'InterfaceGuid', 'MacAddress', 'InterfaceAlias']) # It is normal that it is in this order
+                            'InterfaceGuid', 'MacAddress', 'InterfaceAlias'])  # It is normal that it is in this order
     else:
         query = exec_query(['Get-WmiObject', 'Win32_NetworkAdapter'],
                            ['Name', 'InterfaceIndex', 'InterfaceDescription',
@@ -959,11 +959,22 @@ _orig_open_pcap = pcapdnet.open_pcap
 
 
 def open_pcap(iface, *args, **kargs):
+    """open_pcap: Windows routine for creating a pcap from an interface.
+    This function is also responsible for detecting monitor mode.
+    """
     iface_pcap_name = pcapname(iface)
     if not isinstance(iface, NetworkInterface) and iface_pcap_name is not None:
         iface = IFACES.dev_from_name(iface)
-    if conf.use_npcap and isinstance(iface, NetworkInterface) and iface.ismonitor():
-        kargs["monitor"] = True
+    if conf.use_npcap and isinstance(iface, NetworkInterface):
+        monitored = iface.ismonitor()
+        kw_monitor = kargs.get("monitor", None)
+        if kw_monitor is None:
+            # The monitor param is not specified. Matching it to current state
+            kargs["monitor"] = monitored
+        elif kw_monitor is not monitored:
+            # The monitor param is specified, and not matching the current
+            # interface state
+            iface.setmonitor(kw_monitor)
     return _orig_open_pcap(iface_pcap_name, *args, **kargs)
 
 
@@ -1002,12 +1013,12 @@ def _read_routes_xp():
 
 
 def _read_routes_7():
-    routes=[]
+    routes = []
     for line in exec_query(['Get-WmiObject', 'Win32_IP4RouteTable'],
                            ['Name', 'Mask', 'NextHop', 'InterfaceIndex', 'Metric1']):
         try:
             iface = dev_from_index(line[3])
-            ip = "127.0.0.1" if line[3] == "1" else iface.ip # Force loopback on iface 1
+            ip = "127.0.0.1" if line[3] == "1" else iface.ip  # Force loopback on iface 1
             routes.append((atol(line[0]), atol(line[1]), line[2], iface, ip, int(line[4])))
         except ValueError:
             continue
@@ -1072,10 +1083,10 @@ def _read_routes_post2008():
         #     log_loading.warning("Building Scapy's routing table: Couldn't get outgoing interface for destination %s", dest)
         #     continue
         dest, mask = line[1].split('/')
-        ip = "127.0.0.1" if line[0] == "1" else iface.ip # Force loopback on iface 1
+        ip = "127.0.0.1" if line[0] == "1" else iface.ip  # Force loopback on iface 1
         if not line[4].strip():  # InterfaceMetric is not available. Load it from netsh
             if not if4_metrics:
-                 if4_metrics = _get_metrics()
+                if4_metrics = _get_metrics()
             metric = int(line[3]) + if4_metrics.get(iface.win_index, 0)  # RouteMetric + InterfaceMetric
         else:
             metric = int(line[3]) + int(line[4])  # RouteMetric + InterfaceMetric
@@ -1084,7 +1095,7 @@ def _read_routes_post2008():
     return routes
 
 ############
-### IPv6 ###
+#   IPv6   #
 ############
 
 
@@ -1105,7 +1116,7 @@ def in6_getifaddr():
 
 
 def _append_route6(routes, dpref, dp, nh, iface, lifaddr, metric):
-    cset = [] # candidate set (possible source addresses)
+    cset = []  # candidate set (possible source addresses)
     if iface.name == scapy.consts.LOOPBACK_NAME:
         if dpref == '::':
             return
@@ -1134,7 +1145,7 @@ def _read_routes6_post2008():
         dpref, dp = line[1].split('/')
         dp = int(dp)
         nh = line[2]
-        metric = int(line[3])+int(line[4])
+        metric = int(line[3]) + int(line[4])
 
         _append_route6(routes6, dpref, dp, nh, iface, lifaddr, metric)
     return routes6
@@ -1152,8 +1163,8 @@ def _read_routes6_7():
     r_all = ["(.*)"]
     r_ipv6 = [".*:\s+([A-z|0-9|:]+(\/\d+)?)"]
     # Build regex list for each object
-    regex_list = r_ipv6*2 + r_int + r_all*3 + r_int + r_all*3
-    current_object =  []
+    regex_list = r_ipv6 * 2 + r_int + r_all * 3 + r_int + r_all * 3
+    current_object = []
     index = 0
     for l in stdout:
         if not l.strip():
@@ -1173,7 +1184,7 @@ def _read_routes6_7():
                 dp = int(_ip[1])
                 _match = re.search(r_ipv6[0], current_object[3])
                 nh = "::"
-                if _match: # Detect if Next Hop is specified (if not, it will be the IFName)
+                if _match:  # Detect if Next Hop is specified (if not, it will be the IFName)
                     _nhg1 = _match.group(1)
                     nh = _nhg1 if re.match(".*:.*:.*", _nhg1) else "::"
                 metric = int(current_object[6]) + if6_metrics.get(if_index, 0)

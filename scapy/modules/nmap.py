@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """Clone of Nmap's first generation OS fingerprinting.
 
@@ -38,7 +38,7 @@ else:
 
 
 ######################
-## nmap OS fp stuff ##
+#  nmap OS fp stuff  #
 ######################
 
 
@@ -150,7 +150,7 @@ def nmap_sig(target, oport=80, cport=81, ucport=1):
             options=tcpopt, flags=flags)
         for i, flags in enumerate(["CS", "", "SFUP", "A", "S", "A", "FPU"])
     ]
-    tests.append(IP(dst=target)/UDP(sport=5008, dport=ucport)/(300 * "i"))
+    tests.append(IP(dst=target) / UDP(sport=5008, dport=ucport) / (300 * "i"))
 
     ans, unans = sr(tests, timeout=2)
     ans.extend((x, None) for x in unans)

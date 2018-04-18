@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##               2015, 2016, 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016, 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 Authenticated Encryption with Associated Data ciphers.
@@ -124,7 +124,7 @@ class _AEADCipher(six.with_metaclass(_AEADCipherMetaclass, object)):
         Increment the explicit nonce while avoiding any overflow.
         """
         ne = self.nonce_explicit + 1
-        self.nonce_explicit = ne % 2**(self.nonce_explicit_len*8)
+        self.nonce_explicit = ne % 2**(self.nonce_explicit_len * 8)
 
     def auth_encrypt(self, P, A, seq_num=None):
         """
@@ -218,10 +218,10 @@ class _AEADCipher(six.with_metaclass(_AEADCipherMetaclass, object)):
 
 if conf.crypto_valid:
     class Cipher_AES_128_GCM(_AEADCipher):
-       #XXX use the new AESGCM if available
-       #if conf.crypto_valid_advanced:
-       #    cipher_cls = AESGCM
-       #else:
+        # XXX use the new AESGCM if available
+        # if conf.crypto_valid_advanced:
+        #    cipher_cls = AESGCM
+        # else:
         pc_cls = algorithms.AES
         pc_cls_mode = modes.GCM
         key_len = 16
@@ -387,10 +387,10 @@ if conf.crypto_valid_advanced:
 
 if conf.crypto_valid:
     class Cipher_AES_128_GCM_TLS13(_AEADCipher_TLS13):
-       #XXX use the new AESGCM if available
-       #if conf.crypto_valid_advanced:
-       #    cipher_cls = AESGCM
-       #else:
+        # XXX use the new AESGCM if available
+        # if conf.crypto_valid_advanced:
+        #    cipher_cls = AESGCM
+        # else:
         pc_cls = algorithms.AES
         pc_cls_mode = modes.GCM
         key_len = 16

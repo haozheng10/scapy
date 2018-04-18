@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##               2015, 2016, 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016, 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 Block ciphers.
@@ -126,7 +126,7 @@ if conf.crypto_valid:
         key_len = 32
 
 
-### Mostly deprecated ciphers
+# Mostly deprecated ciphers
 
 if conf.crypto_valid:
     class Cipher_DES_CBC(_BlockCipher):
@@ -170,8 +170,8 @@ _sslv2_block_cipher_algs = {}
 
 if conf.crypto_valid:
     _sslv2_block_cipher_algs.update({
-        "IDEA_128_CBC":     Cipher_IDEA_CBC,
-        "DES_64_CBC":       Cipher_DES_CBC,
+        "IDEA_128_CBC": Cipher_IDEA_CBC,
+        "DES_64_CBC": Cipher_DES_CBC,
         "DES_192_EDE3_CBC": Cipher_3DES_EDE_CBC
     })
 

@@ -1,8 +1,8 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## Enhanced by Maxence Tury <maxence.tury@ssi.gouv.fr>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# Enhanced by Maxence Tury <maxence.tury@ssi.gouv.fr>
+# This program is published under a GPLv2 license
 
 """
 Classes that implement ASN.1 data structures.
@@ -31,7 +31,7 @@ class ASN1F_element(object):
 
 
 ##########################
-#### Basic ASN1 Field ####
+#    Basic ASN1 Field    #
 ##########################
 
 class ASN1F_field(ASN1F_element):
@@ -167,7 +167,7 @@ class ASN1F_field(ASN1F_element):
 
 
 ############################
-#### Simple ASN1 Fields ####
+#    Simple ASN1 Fields    #
 ############################
 
 class ASN1F_BOOLEAN(ASN1F_field):
@@ -181,7 +181,7 @@ class ASN1F_INTEGER(ASN1F_field):
     ASN1_tag = ASN1_Class_UNIVERSAL.INTEGER
 
     def randval(self):
-        return RandNum(-2**64, 2**64-1)
+        return RandNum(-2**64, 2**64 - 1)
 
 
 class ASN1F_enum_INTEGER(ASN1F_INTEGER):
@@ -303,17 +303,17 @@ class ASN1F_BMP_STRING(ASN1F_STRING):
 
 
 class ASN1F_SEQUENCE(ASN1F_field):
-# Here is how you could decode a SEQUENCE
-# with an unknown, private high-tag prefix :
-# class PrivSeq(ASN1_Packet):
-#     ASN1_codec = ASN1_Codecs.BER
-#     ASN1_root = ASN1F_SEQUENCE(
-#                       <asn1 field #0>,
-#                       ...
-#                       <asn1 field #N>,
-#                       explicit_tag=0,
-#                       flexible_tag=True)
-# Because we use flexible_tag, the value of the explicit_tag does not matter.
+    # Here is how you could decode a SEQUENCE
+    # with an unknown, private high-tag prefix :
+    # class PrivSeq(ASN1_Packet):
+    #     ASN1_codec = ASN1_Codecs.BER
+    #     ASN1_root = ASN1F_SEQUENCE(
+    #                       <asn1 field #0>,
+    #                       ...
+    #                       <asn1 field #N>,
+    #                       explicit_tag=0,
+    #                       flexible_tag=True)
+    # Because we use flexible_tag, the value of the explicit_tag does not matter.
     ASN1_tag = ASN1_Class_UNIVERSAL.SEQUENCE
     holds_packets = 1
 
@@ -337,7 +337,7 @@ class ASN1F_SEQUENCE(ASN1F_field):
         return all(f.is_empty(pkt) for f in self.seq)
 
     def get_fields_list(self):
-        return reduce(lambda x, y: x+y.get_fields_list(), self.seq, [])
+        return reduce(lambda x, y: x + y.get_fields_list(), self.seq, [])
 
     def m2i(self, pkt, s):
         """
@@ -377,7 +377,7 @@ class ASN1F_SEQUENCE(ASN1F_field):
         return x
 
     def build(self, pkt):
-        s = reduce(lambda x, y: x+y.build(pkt), self.seq, b"")
+        s = reduce(lambda x, y: x + y.build(pkt), self.seq, b"")
         return self.i2m(pkt, s)
 
 
@@ -422,7 +422,7 @@ class ASN1F_SEQUENCE_OF(ASN1F_field):
 
     def build(self, pkt):
         val = getattr(pkt, self.name)
-        if isinstance(val, ASN1_Object) and val.tag==ASN1_Class_UNIVERSAL.RAW:
+        if isinstance(val, ASN1_Object) and val.tag == ASN1_Class_UNIVERSAL.RAW:
             s = val
         elif val is None:
             s = b""
@@ -450,7 +450,7 @@ class ASN1F_TIME_TICKS(ASN1F_INTEGER):
 
 
 #############################
-#### Complex ASN1 Fields ####
+#    Complex ASN1 Fields    #
 #############################
 
 class ASN1F_optional(ASN1F_element):
@@ -546,10 +546,10 @@ class ASN1F_CHOICE(ASN1F_field):
             # we don't want to import ASN1_Packet in this module...
             return self.extract_packet(choice, s)
         elif isinstance(choice, type):
-            #XXX find a way not to instantiate the ASN1F_field
+            # XXX find a way not to instantiate the ASN1F_field
             return choice(self.name, b"").m2i(pkt, s)
         else:
-            #XXX check properly if this is an ASN1F_PACKET
+            # XXX check properly if this is an ASN1F_PACKET
             return choice.m2i(pkt, s)
 
     def i2m(self, pkt, x):
@@ -586,7 +586,7 @@ class ASN1F_PACKET(ASN1F_field):
                              implicit_tag=implicit_tag, explicit_tag=explicit_tag)
         if cls.ASN1_root.ASN1_tag == ASN1_Class_UNIVERSAL.SEQUENCE:
             if implicit_tag is None and explicit_tag is None:
-                self.network_tag = 16|0x20
+                self.network_tag = 16 | 0x20
         self.default = default
 
     def m2i(self, pkt, s):

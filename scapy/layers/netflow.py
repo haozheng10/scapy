@@ -1,9 +1,9 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
-## Netflow V5 appended by spaceB0x and Guillaume Valadon
-## Netflow V9 appended ny Gabriel Potter
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
+# Netflow V5 appended by spaceB0x and Guillaume Valadon
+# Netflow V9 appended ny Gabriel Potter
 
 """
 Cisco NetFlow protocol v1, v5 and v9
@@ -31,7 +31,7 @@ class NetflowHeader(Packet):
 bind_layers(UDP, NetflowHeader, dport=2055)
 
 ###########################################
-### Netflow Version 1
+# Netflow Version 1
 ###########################################
 
 
@@ -63,13 +63,13 @@ class NetflowRecordV1(Packet):
                    IntField("padding2", 0)]
 
 
-bind_layers(NetflowHeader,   NetflowHeaderV1, version=1)
+bind_layers(NetflowHeader, NetflowHeaderV1, version=1)
 bind_layers(NetflowHeaderV1, NetflowRecordV1)
 bind_layers(NetflowRecordV1, NetflowRecordV1)
 
 
 #########################################
-### Netflow Version 5
+# Netflow Version 5
 #########################################
 
 
@@ -109,12 +109,12 @@ class NetflowRecordV5(Packet):
                    ShortField("pad2", 0)]
 
 
-bind_layers(NetflowHeader,   NetflowHeaderV5, version=5)
+bind_layers(NetflowHeader, NetflowHeaderV5, version=5)
 bind_layers(NetflowHeaderV5, NetflowRecordV5)
 bind_layers(NetflowRecordV5, NetflowRecordV5)
 
 #########################################
-### Netflow Version 9
+# Netflow Version 9
 #########################################
 
 # https://www.ietf.org/rfc/rfc3954.txt
@@ -347,7 +347,7 @@ class NetflowTemplateV9(Packet):
     fields_desc = [ShortField("templateID", 255),
                    FieldLenField("fieldCount", None, count_of="template_fields"),
                    PacketListField("template_fields", [], NetflowTemplateFieldV9,
-                                   count_from = lambda pkt: pkt.fieldCount)]
+                                   count_from=lambda pkt: pkt.fieldCount)]
 
     def default_payload_class(self, p):
         return conf.padding_layer
@@ -356,9 +356,9 @@ class NetflowTemplateV9(Packet):
 class NetflowFlowsetV9(Packet):
     name = "Netflow FlowSet V9"
     fields_desc = [ShortField("flowSetID", 0),
-                   FieldLenField("length", None, length_of="templates", adjust=lambda pkt, x:x+4),
+                   FieldLenField("length", None, length_of="templates", adjust=lambda pkt, x:x + 4),
                    PacketListField("templates", [], NetflowTemplateV9,
-                                   length_from = lambda pkt: pkt.length-4)]
+                                   length_from=lambda pkt: pkt.length - 4)]
 
 
 class _CustomStrFixedLenField(StrFixedLenField):
@@ -392,9 +392,9 @@ class NetflowRecordV9(Packet):
 class NetflowDataflowsetV9(Packet):
     name = "Netflow DataFlowSet V9"
     fields_desc = [ShortField("templateID", 255),
-                   FieldLenField("length", None, length_of="records", adjust = lambda pkt, x:x+4),
+                   FieldLenField("length", None, length_of="records", adjust=lambda pkt, x:x + 4),
                    PadField(PacketListField("records", [], NetflowRecordV9,
-                                            length_from = lambda pkt: pkt.length-4),
+                                            length_from=lambda pkt: pkt.length - 4),
                             4, padwith=b"\x00")]
 
     @classmethod
@@ -417,7 +417,7 @@ def netflowv9_defragment(plist):
         root = pkt.firstlayer()
         # Get all linked NetflowFlowsetV9
         for p in packet_list:
-            if NetflowFlowsetV9 in p: ## STEP 1 - NetflowFlowsetV9
+            if NetflowFlowsetV9 in p:  # STEP 1 - NetflowFlowsetV9
                 current = p[NetflowFlowsetV9]
                 for ntv9 in current.templates:
                     current_ftl = root.getlayer(NetflowDataflowsetV9, templateID=ntv9.templateID)
@@ -446,7 +446,7 @@ def netflowv9_defragment(plist):
                         current_ftl.records = res
                         current_ftl.do_dissect_payload(data)
                         break
-            if NetflowOptionsFlowsetV9 in p: ## STEP 2 - NetflowOptionsFlowsetV9
+            if NetflowOptionsFlowsetV9 in p:  # STEP 2 - NetflowOptionsFlowsetV9
                 current = p[NetflowOptionsFlowsetV9]
                 current_ftl = root.getlayer(NetflowDataflowsetV9, templateID=current.templateID)
                 if current_ftl:
@@ -459,7 +459,7 @@ def netflowv9_defragment(plist):
                         continue
                     res = []
                     # Now, according to the NetflowOptionsFlowsetV9 data, re-dissect NetflowDataflowsetV9
-                    ## A - Decode scopes
+                    # A - Decode scopes
                     lengths_list = []
                     for scope in current.scopes:
                         lengths_list.append((scope.scopeFieldlength, scope.scopeFieldType))
@@ -469,7 +469,7 @@ def netflowv9_defragment(plist):
                         while len(data) >= tot_len:
                             res.append(cls(data[:tot_len]))
                             data = data[tot_len:]
-                    ## B - Decode options
+                    # B - Decode options
                     lengths_list = []
                     for option in current.options:
                         lengths_list.append((option.optionFieldlength, option.optionFieldType))
@@ -522,9 +522,9 @@ class NetflowOptionsFlowsetV9(Packet):
                    FieldLenField("option_scope_length", None, length_of="scopes"),
                    FieldLenField("option_field_length", None, length_of="options"),
                    PacketListField("scopes", [], NetflowOptionsFlowsetScopeV9,
-                                   length_from = lambda pkt: pkt.option_scope_length),
+                                   length_from=lambda pkt: pkt.option_scope_length),
                    PadField(PacketListField("options", [], NetflowOptionsFlowsetOptionV9,
-                                            length_from = lambda pkt: pkt.option_field_length),
+                                            length_from=lambda pkt: pkt.option_field_length),
                             4, padwith=b"\x00")]
 
 

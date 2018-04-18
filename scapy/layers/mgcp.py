@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 MGCP (Media Gateway Control Protocol)
@@ -28,7 +28,7 @@ class MGCP(Packet):
                    ]
 
 
-#class MGCP(Packet):
+# class MGCP(Packet):
 #    name = "MGCP"
 #    longname = "Media Gateway Control Protocol"
 #    fields_desc = [ ByteEnumField("type",0, ["request","response","others"]),
@@ -42,5 +42,5 @@ class MGCP(Packet):
 #                    ByteField("is_duplicate",0),
 #                    ByteField("req_available",0) ]
 #
-bind_layers(UDP,           MGCP,          dport=2727)
-bind_layers(UDP,           MGCP,          sport=2727)
+bind_layers(UDP, MGCP, dport=2727)
+bind_layers(UDP, MGCP, sport=2727)

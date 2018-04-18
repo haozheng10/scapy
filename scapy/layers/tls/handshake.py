@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##               2015, 2016, 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016, 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 TLS handshake fields & logic.
@@ -42,18 +42,18 @@ from scapy.layers.tls.crypto.suites import (_tls_cipher_suites,
 
 
 ###############################################################################
-### Generic TLS Handshake message                                           ###
+#   Generic TLS Handshake message                                             #
 ###############################################################################
 
-_tls_handshake_type = {0: "hello_request",         1: "client_hello",
-                       2: "server_hello",          3: "hello_verify_request",
-                       4: "session_ticket",        6: "hello_retry_request",
-                       8: "encrypted_extensions",  11: "certificate",
-                       12: "server_key_exchange",  13: "certificate_request",
-                       14: "server_hello_done",    15: "certificate_verify",
-                       16: "client_key_exchange",  20: "finished",
-                       21: "certificate_url",      22: "certificate_status",
-                       23: "supplemental_data",    24: "key_update"}
+_tls_handshake_type = {0: "hello_request", 1: "client_hello",
+                       2: "server_hello", 3: "hello_verify_request",
+                       4: "session_ticket", 6: "hello_retry_request",
+                       8: "encrypted_extensions", 11: "certificate",
+                       12: "server_key_exchange", 13: "certificate_request",
+                       14: "server_hello_done", 15: "certificate_verify",
+                       16: "client_key_exchange", 20: "finished",
+                       21: "certificate_url", 22: "certificate_status",
+                       23: "supplemental_data", 24: "key_update"}
 
 
 class _TLSHandshake(_GenericTLSSessionInheritance):
@@ -86,7 +86,7 @@ class _TLSHandshake(_GenericTLSSessionInheritance):
 
 
 ###############################################################################
-### HelloRequest                                                            ###
+#   HelloRequest                                                              #
 ###############################################################################
 
 class TLSHelloRequest(_TLSHandshake):
@@ -103,7 +103,7 @@ class TLSHelloRequest(_TLSHandshake):
 
 
 ###############################################################################
-### ClientHello fields                                                      ###
+#   ClientHello fields                                                        #
 ###############################################################################
 
 class _GMTUnixTimeField(UTCTimeField):
@@ -191,7 +191,7 @@ class _CipherSuitesField(StrLenField):
     def i2len(self, pkt, i):
         if i is None:
             return 0
-        return len(i)*self.itemsize
+        return len(i) * self.itemsize
 
 
 class _CompressionMethodsField(_CipherSuitesField):
@@ -206,7 +206,7 @@ class _CompressionMethodsField(_CipherSuitesField):
 
 
 ###############################################################################
-### ClientHello                                                             ###
+#   ClientHello                                                               #
 ###############################################################################
 
 class TLSClientHello(_TLSHandshake):
@@ -224,7 +224,7 @@ class TLSClientHello(_TLSHandshake):
                    ThreeBytesField("msglen", None),
                    _TLSClientVersionField("version", None, _tls_version),
 
-                   #_TLSRandomBytesField("random_bytes", None, 32),
+                   # _TLSRandomBytesField("random_bytes", None, 32),
                    _GMTUnixTimeField("gmt_unix_time", None),
                    _TLSRandomBytesField("random_bytes", None, 28),
 
@@ -242,8 +242,7 @@ class TLSClientHello(_TLSHandshake):
                    _CompressionMethodsField("comp", [0],
                                             _tls_compression_algs,
                                             itemfmt="B",
-                                            length_from=
-                                            lambda pkt: pkt.complen),
+                                            length_from=lambda pkt: pkt.complen),
 
                    _ExtensionsLenField("extlen", None, length_of="ext"),
                    _ExtensionsField("ext", None,
@@ -255,14 +254,14 @@ class TLSClientHello(_TLSHandshake):
 
     def post_build(self, p, pay):
         if self.random_bytes is None:
-            p = p[:10] + randstring(28) + p[10+28:]
+            p = p[:10] + randstring(28) + p[10 + 28:]
 
         # if no ciphersuites were provided, we add a few usual, supported
         # ciphersuites along with the appropriate extensions
         if self.ciphers is None:
             cipherstart = 39 + (self.sidlen or 0)
             s = b"001ac02bc023c02fc027009e0067009c003cc009c0130033002f000a"
-            p = p[:cipherstart] + bytes_hex(s) + p[cipherstart+2:]
+            p = p[:cipherstart] + bytes_hex(s) + p[cipherstart + 2:]
             if self.ext is None:
                 ext_len = b'\x00\x2c'
                 ext_reneg = b'\xff\x01\x00\x01\x00'
@@ -294,7 +293,7 @@ class TLSClientHello(_TLSHandshake):
                     break
 
 ###############################################################################
-### ServerHello                                                             ###
+#   ServerHello                                                               #
 ###############################################################################
 
 
@@ -313,13 +312,13 @@ class TLSServerHello(TLSClientHello):
                    ThreeBytesField("msglen", None),
                    _TLSVersionField("version", None, _tls_version),
 
-                   #_TLSRandomBytesField("random_bytes", None, 32),
+                   # _TLSRandomBytesField("random_bytes", None, 32),
                    _GMTUnixTimeField("gmt_unix_time", None),
                    _TLSRandomBytesField("random_bytes", None, 28),
 
                    FieldLenField("sidlen", None, length_of="sid", fmt="B"),
                    _SessionIDField("sid", "",
-                                   length_from = lambda pkt: pkt.sidlen),
+                                   length_from=lambda pkt: pkt.sidlen),
 
                    EnumField("cipher", None, _tls_cipher_suites),
                    _CompressionMethodsField("comp", [0],
@@ -332,7 +331,7 @@ class TLSServerHello(TLSClientHello):
                                     length_from=lambda pkt: (pkt.msglen -
                                                              (pkt.sidlen or 0) -
                                                              38))]
-                                                              #40)) ]
+    # 40)) ]
 
     @classmethod
     def dispatch_hook(cls, _pkt=None, *args, **kargs):
@@ -344,7 +343,7 @@ class TLSServerHello(TLSClientHello):
 
     def post_build(self, p, pay):
         if self.random_bytes is None:
-            p = p[:10] + randstring(28) + p[10+28:]
+            p = p[:10] + randstring(28) + p[10 + 28:]
         return super(TLSClientHello, self).post_build(p, pay)
 
     def tls_session_update(self, msg_str):
@@ -448,7 +447,7 @@ class TLS13ServerHello(TLSClientHello):
 
 
 ###############################################################################
-### HelloRetryRequest                                                       ###
+#   HelloRetryRequest                                                         #
 ###############################################################################
 
 class TLSHelloRetryRequest(_TLSHandshake):
@@ -462,7 +461,7 @@ class TLSHelloRetryRequest(_TLSHandshake):
 
 
 ###############################################################################
-### EncryptedExtensions                                                     ###
+#   EncryptedExtensions                                                       #
 ###############################################################################
 
 class TLSEncryptedExtensions(_TLSHandshake):
@@ -475,10 +474,10 @@ class TLSEncryptedExtensions(_TLSHandshake):
 
 
 ###############################################################################
-### Certificate                                                             ###
+#   Certificate                                                               #
 ###############################################################################
 
-#XXX It might be appropriate to rewrite this mess with basic 3-byte FieldLenField.
+# XXX It might be appropriate to rewrite this mess with basic 3-byte FieldLenField.
 
 class _ASN1CertLenField(FieldLenField):
     """
@@ -609,7 +608,7 @@ class TLSCertificate(_TLSHandshake):
                    ThreeBytesField("msglen", None),
                    _ASN1CertLenField("certslen", None, length_of="certs"),
                    _ASN1CertListField("certs", [],
-                                      length_from = lambda pkt: pkt.certslen)]
+                                      length_from=lambda pkt: pkt.certslen)]
 
     @classmethod
     def dispatch_hook(cls, _pkt=None, *args, **kargs):
@@ -670,7 +669,7 @@ class TLS13Certificate(_TLSHandshake):
 
 
 ###############################################################################
-### ServerKeyExchange                                                       ###
+#   ServerKeyExchange                                                         #
 ###############################################################################
 
 class TLSServerKeyExchange(_TLSHandshake):
@@ -762,19 +761,19 @@ class TLSServerKeyExchange(_TLSHandshake):
 
 
 ###############################################################################
-### CertificateRequest                                                      ###
+#   CertificateRequest                                                        #
 ###############################################################################
 
-_tls_client_certificate_types =  {1: "rsa_sign",
-                                  2: "dss_sign",
-                                  3: "rsa_fixed_dh",
-                                  4: "dss_fixed_dh",
-                                  5: "rsa_ephemeral_dh_RESERVED",
-                                  6: "dss_ephemeral_dh_RESERVED",
-                                  20: "fortezza_dms_RESERVED",
-                                  64: "ecdsa_sign",
-                                  65: "rsa_fixed_ecdh",
-                                  66: "ecdsa_fixed_ecdh"}
+_tls_client_certificate_types = {1: "rsa_sign",
+                                 2: "dss_sign",
+                                 3: "rsa_fixed_dh",
+                                 4: "dss_fixed_dh",
+                                 5: "rsa_ephemeral_dh_RESERVED",
+                                 6: "dss_ephemeral_dh_RESERVED",
+                                 20: "fortezza_dms_RESERVED",
+                                 64: "ecdsa_sign",
+                                 65: "rsa_fixed_ecdh",
+                                 66: "ecdsa_fixed_ecdh"}
 
 
 class _CertTypesField(_CipherSuitesField):
@@ -798,9 +797,9 @@ class _CertAuthoritiesField(StrLenField):
             if len(m) < l + 2:
                 res.append((l, m[2:]))
                 break
-            dn = m[2:2+l]
+            dn = m[2:2 + l]
             res.append((l, dn))
-            m = m[2+l:]
+            m = m[2 + l:]
         return res
 
     def i2m(self, pkt, i):
@@ -838,7 +837,7 @@ class TLSCertificateRequest(_TLSHandshake):
 
 
 ###############################################################################
-### ServerHelloDone                                                         ###
+#   ServerHelloDone                                                           #
 ###############################################################################
 
 class TLSServerHelloDone(_TLSHandshake):
@@ -848,7 +847,7 @@ class TLSServerHelloDone(_TLSHandshake):
 
 
 ###############################################################################
-### CertificateVerify                                                       ###
+#   CertificateVerify                                                         #
 ###############################################################################
 
 class TLSCertificateVerify(_TLSHandshake):
@@ -868,7 +867,7 @@ class TLSCertificateVerify(_TLSHandshake):
                     context_string = "TLS 1.3, client CertificateVerify"
                 elif s.connection_end == "server":
                     context_string = "TLS 1.3, server CertificateVerify"
-                m = b"\x20"*64 + context_string + b"\x00" + s.wcs.hash.digest(m)
+                m = b"\x20" * 64 + context_string + b"\x00" + s.wcs.hash.digest(m)
             self.sig = _TLSSignature(tls_session=s)
             if s.connection_end == "client":
                 self.sig._update_sig(m, s.client_key)
@@ -885,7 +884,7 @@ class TLSCertificateVerify(_TLSHandshake):
                 context_string = b"TLS 1.3, server CertificateVerify"
             elif s.connection_end == "server":
                 context_string = b"TLS 1.3, client CertificateVerify"
-            m = b"\x20"*64 + context_string + b"\x00" + s.rcs.hash.digest(m)
+            m = b"\x20" * 64 + context_string + b"\x00" + s.rcs.hash.digest(m)
 
         if s.connection_end == "server":
             if s.client_certs and len(s.client_certs) > 0:
@@ -903,7 +902,7 @@ class TLSCertificateVerify(_TLSHandshake):
 
 
 ###############################################################################
-### ClientKeyExchange                                                       ###
+#   ClientKeyExchange                                                         #
 ###############################################################################
 
 class _TLSCKExchKeysField(PacketField):
@@ -931,9 +930,9 @@ class _TLSCKExchKeysField(PacketField):
             cls = s.prcs.key_exchange.client_kx_msg_cls
 
         if cls is None:
-            return Raw(tbd)/Padding(rem)
+            return Raw(tbd) / Padding(rem)
 
-        return cls(tbd, tls_session=s)/Padding(rem)
+        return cls(tbd, tls_session=s) / Padding(rem)
 
 
 class TLSClientKeyExchange(_TLSHandshake):
@@ -944,7 +943,7 @@ class TLSClientKeyExchange(_TLSHandshake):
     fields_desc = [ByteEnumField("msgtype", 16, _tls_handshake_type),
                    ThreeBytesField("msglen", None),
                    _TLSCKExchKeysField("exchkeys",
-                                       length_from = lambda pkt: pkt.msglen)]
+                                       length_from=lambda pkt: pkt.msglen)]
 
     def build(self, *args, **kargs):
         fval = self.getfieldval("exchkeys")
@@ -960,7 +959,7 @@ class TLSClientKeyExchange(_TLSHandshake):
 
 
 ###############################################################################
-### Finished                                                                ###
+#   Finished                                                                  #
 ###############################################################################
 
 class _VerifyDataField(StrLenField):
@@ -1042,10 +1041,10 @@ class TLSFinished(_TLSHandshake):
                 s.compute_tls13_resumption_secret()
 
 
-## Additional handshake messages
+# Additional handshake messages
 
 ###############################################################################
-### HelloVerifyRequest                                                      ###
+#   HelloVerifyRequest                                                        #
 ###############################################################################
 
 class TLSHelloVerifyRequest(_TLSHandshake):
@@ -1062,7 +1061,7 @@ class TLSHelloVerifyRequest(_TLSHandshake):
 
 
 ###############################################################################
-### CertificateURL                                                          ###
+#   CertificateURL                                                            #
 ###############################################################################
 
 _tls_cert_chain_types = {0: "individual_certs",
@@ -1076,9 +1075,9 @@ class URLAndOptionalHash(Packet):
                                length_from=lambda pkt: pkt.urllen),
                    FieldLenField("hash_present", None,
                                  fmt="B", length_of="hash",
-                                 adjust=lambda pkt, x: int(math.ceil(x/20.))),
+                                 adjust=lambda pkt, x: int(math.ceil(x / 20.))),
                    StrLenField("hash", "",
-                               length_from=lambda pkt: 20*pkt.hash_present)]
+                               length_from=lambda pkt: 20 * pkt.hash_present)]
 
     def guess_payload_class(self, p):
         return Padding
@@ -1098,11 +1097,11 @@ class TLSCertificateURL(_TLSHandshake):
 
 
 ###############################################################################
-### CertificateStatus                                                       ###
+#   CertificateStatus                                                         #
 ###############################################################################
 
 class ThreeBytesLenField(FieldLenField):
-    def __init__(self, name, default,  length_of=None, adjust=lambda pkt, x: x):
+    def __init__(self, name, default, length_of=None, adjust=lambda pkt, x: x):
         FieldLenField.__init__(self, name, default, length_of=length_of,
                                fmt='!I', adjust=adjust)
 
@@ -1112,13 +1111,13 @@ class ThreeBytesLenField(FieldLenField):
         return repr(self.i2h(pkt, x))
 
     def addfield(self, pkt, s, val):
-        return s+struct.pack(self.fmt, self.i2m(pkt, val))[1:4]
+        return s + struct.pack(self.fmt, self.i2m(pkt, val))[1:4]
 
     def getfield(self, pkt, s):
-        return  s[3:], self.m2i(pkt, struct.unpack(self.fmt, b"\x00"+s[:3])[0])
+        return s[3:], self.m2i(pkt, struct.unpack(self.fmt, b"\x00" + s[:3])[0])
 
 
-_cert_status_cls  = {1: OCSP_Response}
+_cert_status_cls = {1: OCSP_Response}
 
 
 class _StatusField(PacketField):
@@ -1141,7 +1140,7 @@ class TLSCertificateStatus(_TLSHandshake):
 
 
 ###############################################################################
-### SupplementalData                                                        ###
+#   SupplementalData                                                          #
 ###############################################################################
 
 class SupDataEntry(Packet):
@@ -1170,7 +1169,7 @@ class SupDataEntryUM(Packet):
     name = "Supplemental Data Entry - User Mapping"
     fields_desc = [ShortField("sdtype", None),
                    FieldLenField("len", None, length_of="data",
-                                 adjust=lambda pkt, x: x+2),
+                                 adjust=lambda pkt, x: x + 2),
                    FieldLenField("dlen", None, length_of="data"),
                    PacketListField("data", [], UserMappingData,
                                    length_from=lambda pkt:pkt.dlen)]
@@ -1189,7 +1188,7 @@ class TLSSupplementalData(_TLSHandshake):
 
 
 ###############################################################################
-### NewSessionTicket                                                        ###
+#   NewSessionTicket                                                          #
 ###############################################################################
 
 class TLSNewSessionTicket(_TLSHandshake):
@@ -1227,7 +1226,7 @@ class TLS13NewSessionTicket(_TLSHandshake):
                    IntField("ticket_lifetime", 0xffffffff),
                    IntField("ticket_age_add", 0),
                    FieldLenField("ticketlen", None, length_of="ticket"),
-                   #TicketField("ticket", "",
+                   # TicketField("ticket", "",
                    StrLenField("ticket", "",
                                length_from=lambda pkt: pkt.ticketlen),
                    _ExtensionsLenField("extlen", None, length_of="ext"),
@@ -1243,16 +1242,16 @@ class TLS13NewSessionTicket(_TLSHandshake):
 
 
 ###############################################################################
-### All handshake messages defined in this module                           ###
+#   All handshake messages defined in this module                             #
 ###############################################################################
 
-_tls_handshake_cls = {0: TLSHelloRequest,          1: TLSClientHello,
-                      2: TLSServerHello,           3: TLSHelloVerifyRequest,
-                      4: TLSNewSessionTicket,      6: TLSHelloRetryRequest,
-                      8: TLSEncryptedExtensions,   11: TLSCertificate,
-                      12: TLSServerKeyExchange,    13: TLSCertificateRequest,
-                      14: TLSServerHelloDone,      15: TLSCertificateVerify,
-                      16: TLSClientKeyExchange,    20: TLSFinished,
-                      21: TLSCertificateURL,       22: TLSCertificateStatus,
+_tls_handshake_cls = {0: TLSHelloRequest, 1: TLSClientHello,
+                      2: TLSServerHello, 3: TLSHelloVerifyRequest,
+                      4: TLSNewSessionTicket, 6: TLSHelloRetryRequest,
+                      8: TLSEncryptedExtensions, 11: TLSCertificate,
+                      12: TLSServerKeyExchange, 13: TLSCertificateRequest,
+                      14: TLSServerHelloDone, 15: TLSCertificateVerify,
+                      16: TLSClientKeyExchange, 20: TLSFinished,
+                      21: TLSCertificateURL, 22: TLSCertificateStatus,
                       23: TLSSupplementalData}
 

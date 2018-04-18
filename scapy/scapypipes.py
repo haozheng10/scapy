@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 from __future__ import print_function
 import socket
@@ -158,7 +158,7 @@ class UDPDrain(Drain):
 
     def high_push(self, msg):
         from scapy.layers.inet import IP, UDP
-        p = IP(dst=self.ip)/UDP(sport=1234, dport=self.port)/msg
+        p = IP(dst=self.ip) / UDP(sport=1234, dport=self.port) / msg
         self._send(p)
 
 

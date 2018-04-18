@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Sebek: kernel module for data collection on honeypots.
@@ -15,7 +15,7 @@ from scapy.packet import *
 from scapy.layers.inet import UDP
 
 
-### SEBEK
+# SEBEK
 
 
 class SebekHead(Packet):
@@ -112,11 +112,11 @@ class SebekV2Sock(SebekV3Sock):
             return self.sprintf("Sebek v2 socket (%SebekV2Sock.cmd%)")
 
 
-bind_layers(UDP,           SebekHead,     sport=1101)
-bind_layers(UDP,           SebekHead,     dport=1101)
-bind_layers(UDP,           SebekHead,     dport=1101, sport=1101)
-bind_layers(SebekHead,     SebekV1,       version=1)
-bind_layers(SebekHead,     SebekV2Sock,   version=2, type=2)
-bind_layers(SebekHead,     SebekV2,       version=2)
-bind_layers(SebekHead,     SebekV3Sock,   version=3, type=2)
-bind_layers(SebekHead,     SebekV3,       version=3)
+bind_layers(UDP, SebekHead, sport=1101)
+bind_layers(UDP, SebekHead, dport=1101)
+bind_layers(UDP, SebekHead, dport=1101, sport=1101)
+bind_layers(SebekHead, SebekV1, version=1)
+bind_layers(SebekHead, SebekV2Sock, version=2, type=2)
+bind_layers(SebekHead, SebekV2, version=2)
+bind_layers(SebekHead, SebekV3Sock, version=3, type=2)
+bind_layers(SebekHead, SebekV3, version=3)

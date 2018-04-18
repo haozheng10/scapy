@@ -1,14 +1,14 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Generators and packet meta classes.
 """
 
 ################
-## Generators ##
+#  Generators  #
 ################
 
 from __future__ import absolute_import
@@ -40,7 +40,7 @@ def _get_values(value):
 
 class SetGen(Gen):
     def __init__(self, values, _iterpacket=1):
-        self._iterpacket=_iterpacket
+        self._iterpacket = _iterpacket
         if isinstance(values, (list, BasePacketList)):
             self.values = [_get_values(val) for val in values]
         else:
@@ -77,22 +77,22 @@ class Net(Gen):
             x, y = [int(d) for d in a.split('-')]
             if x > y:
                 y = x
-            a = (x &  (0xff<<netmask), max(y, (x | (0xff>>(8-netmask))))+1)
+            a = (x & (0xff << netmask), max(y, (x | (0xff >> (8 - netmask)))) + 1)
         else:
-            a = (int(a) & (0xff<<netmask), (int(a) | (0xff>>(8-netmask)))+1)
+            a = (int(a) & (0xff << netmask), (int(a) | (0xff >> (8 - netmask))) + 1)
         return a
 
     @classmethod
     def _parse_net(cls, net):
-        tmp=net.split('/')+["32"]
+        tmp = net.split('/') + ["32"]
         if not cls.ip_regex.match(net):
-            tmp[0]=socket.gethostbyname(tmp[0])
+            tmp[0] = socket.gethostbyname(tmp[0])
         netmask = int(tmp[1])
-        ret_list = [cls._parse_digit(x, y-netmask) for (x, y) in zip(tmp[0].split('.'), [8, 16, 24, 32])]
+        ret_list = [cls._parse_digit(x, y - netmask) for (x, y) in zip(tmp[0].split('.'), [8, 16, 24, 32])]
         return ret_list, netmask
 
     def __init__(self, net):
-        self.repr=net
+        self.repr = net
         self.parsed, self.netmask = self._parse_net(net)
 
     def __str__(self):
@@ -156,7 +156,7 @@ class OID(Gen):
                 if i >= len(ii):
                     raise StopIteration
                 if ii[i] < self.cmpt[i][1]:
-                    ii[i]+=1
+                    ii[i] += 1
                     break
                 else:
                     ii[i] = self.cmpt[i][0]
@@ -164,28 +164,28 @@ class OID(Gen):
 
 
 ######################################
-## Packet abstract and base classes ##
+#  Packet abstract and base classes  #
 ######################################
 
 class Packet_metaclass(type):
     def __new__(cls, name, bases, dct):
-        if "fields_desc" in dct: # perform resolution of references to other packets
+        if "fields_desc" in dct:  # perform resolution of references to other packets
             current_fld = dct["fields_desc"]
             resolved_fld = []
             for f in current_fld:
-                if isinstance(f, Packet_metaclass): # reference to another fields_desc
+                if isinstance(f, Packet_metaclass):  # reference to another fields_desc
                     for f2 in f.fields_desc:
                         resolved_fld.append(f2)
                 else:
                     resolved_fld.append(f)
-        else: # look for a fields_desc in parent classes
+        else:  # look for a fields_desc in parent classes
             resolved_fld = None
             for b in bases:
                 if hasattr(b, "fields_desc"):
                     resolved_fld = b.fields_desc
                     break
 
-        if resolved_fld: # perform default value replacements
+        if resolved_fld:  # perform default value replacements
             final_fld = []
             for f in resolved_fld:
                 if f.name in dct:
@@ -258,12 +258,12 @@ class NewDefaultValues(Packet_metaclass):
         from scapy.error import log_loading
         import traceback
         try:
-            for tb in traceback.extract_stack()+[("??", -1, None, "")]:
+            for tb in traceback.extract_stack() + [("??", -1, None, "")]:
                 f, l, _, line = tb
                 if line.startswith("class"):
                     break
         except:
-            f, l="??", -1
+            f, l = "??", -1
             raise
         log_loading.warning("Deprecated (no more needed) use of NewDefaultValues  (%s l. %i).", f, l)
 
@@ -275,7 +275,7 @@ class BasePacket(Gen):
 
 
 #############################
-## Packet list base class  ##
+#  Packet list base class   #
 #############################
 
 class BasePacketList(object):

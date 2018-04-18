@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##               2015, 2016, 2017 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016, 2017 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 TLS key exchange logic.
@@ -28,23 +28,23 @@ if conf.crypto_valid:
 
 
 ###############################################################################
-### Common Fields                                                           ###
+#   Common Fields                                                             #
 ###############################################################################
 
-_tls_hash_sig = {0x0000: "none+anon",    0x0001: "none+rsa",
-                 0x0002: "none+dsa",     0x0003: "none+ecdsa",
-                 0x0100: "md5+anon",     0x0101: "md5+rsa",
-                 0x0102: "md5+dsa",      0x0103: "md5+ecdsa",
-                 0x0200: "sha1+anon",    0x0201: "sha1+rsa",
-                 0x0202: "sha1+dsa",     0x0203: "sha1+ecdsa",
-                 0x0300: "sha224+anon",  0x0301: "sha224+rsa",
-                 0x0302: "sha224+dsa",   0x0303: "sha224+ecdsa",
-                 0x0400: "sha256+anon",  0x0401: "sha256+rsa",
-                 0x0402: "sha256+dsa",   0x0403: "sha256+ecdsa",
-                 0x0500: "sha384+anon",  0x0501: "sha384+rsa",
-                 0x0502: "sha384+dsa",   0x0503: "sha384+ecdsa",
-                 0x0600: "sha512+anon",  0x0601: "sha512+rsa",
-                 0x0602: "sha512+dsa",   0x0603: "sha512+ecdsa",
+_tls_hash_sig = {0x0000: "none+anon", 0x0001: "none+rsa",
+                 0x0002: "none+dsa", 0x0003: "none+ecdsa",
+                 0x0100: "md5+anon", 0x0101: "md5+rsa",
+                 0x0102: "md5+dsa", 0x0103: "md5+ecdsa",
+                 0x0200: "sha1+anon", 0x0201: "sha1+rsa",
+                 0x0202: "sha1+dsa", 0x0203: "sha1+ecdsa",
+                 0x0300: "sha224+anon", 0x0301: "sha224+rsa",
+                 0x0302: "sha224+dsa", 0x0303: "sha224+ecdsa",
+                 0x0400: "sha256+anon", 0x0401: "sha256+rsa",
+                 0x0402: "sha256+dsa", 0x0403: "sha256+ecdsa",
+                 0x0500: "sha384+anon", 0x0501: "sha384+rsa",
+                 0x0502: "sha384+dsa", 0x0503: "sha384+ecdsa",
+                 0x0600: "sha512+anon", 0x0601: "sha512+rsa",
+                 0x0602: "sha512+dsa", 0x0603: "sha512+ecdsa",
                  0x0804: "sha256+rsapss",
                  0x0805: "sha384+rsapss",
                  0x0806: "sha512+rsapss",
@@ -221,7 +221,7 @@ class _TLSSignatureField(PacketField):
     def m2i(self, pkt, m):
         l = self.length_from(pkt)
         if l == 0:
-           return None
+            return None
         return _TLSSignature(m, tls_session=pkt.tls_session)
 
     def getfield(self, pkt, s):
@@ -259,7 +259,7 @@ class _TLSServerParamsField(PacketField):
         if s.prcs:
             cls = s.prcs.key_exchange.server_kx_msg_cls(m)
             if cls is None:
-                return None, Raw(m[:l])/Padding(m[l:])
+                return None, Raw(m[:l]) / Padding(m[l:])
             return cls(m, tls_session=s)
         else:
             try:
@@ -271,15 +271,15 @@ class _TLSServerParamsField(PacketField):
                 cls = _tls_server_ecdh_cls_guess(m)
                 p = cls(m, tls_session=s)
                 if pkcs_os2ip(p.load[:2]) not in _tls_hash_sig:
-                    return None, Raw(m[:l])/Padding(m[l:])
+                    return None, Raw(m[:l]) / Padding(m[l:])
                 return p
 
 
 ###############################################################################
-### Server Key Exchange parameters & value                                  ###
+#   Server Key Exchange parameters & value                                    #
 ###############################################################################
 
-### Finite Field Diffie-Hellman
+# Finite Field Diffie-Hellman
 
 class ServerDHParams(_GenericTLSSessionInheritance):
     """
@@ -318,7 +318,7 @@ class ServerDHParams(_GenericTLSSessionInheritance):
         default_mLen = _ffdh_groups['modp2048'][1]
 
         if not self.dh_p:
-            self.dh_p = pkcs_i2osp(default_params.p, default_mLen//8)
+            self.dh_p = pkcs_i2osp(default_params.p, default_mLen // 8)
         if self.dh_plen is None:
             self.dh_plen = len(self.dh_p)
 
@@ -335,7 +335,7 @@ class ServerDHParams(_GenericTLSSessionInheritance):
             s.server_kx_privkey = real_params.generate_private_key()
             pubkey = s.server_kx_privkey.public_key()
             y = pubkey.public_numbers().y
-            self.dh_Ys = pkcs_i2osp(y, pubkey.key_size//8)
+            self.dh_Ys = pkcs_i2osp(y, pubkey.key_size // 8)
         # else, we assume that the user wrote the server_kx_privkey by himself
         if self.dh_Yslen is None:
             self.dh_Yslen = len(self.dh_Ys)
@@ -376,7 +376,7 @@ class ServerDHParams(_GenericTLSSessionInheritance):
         return Padding
 
 
-### Elliptic Curve Diffie-Hellman
+# Elliptic Curve Diffie-Hellman
 
 _tls_ec_curve_types = {1: "explicit_prime",
                        2: "explicit_char2",
@@ -388,18 +388,18 @@ _tls_ec_basis_types = {0: "ec_basis_trinomial", 1: "ec_basis_pentanomial"}
 class ECCurvePkt(Packet):
     name = "Elliptic Curve"
     fields_desc = [FieldLenField("alen", None, length_of="a", fmt="B"),
-                   StrLenField("a", "", length_from = lambda pkt: pkt.alen),
+                   StrLenField("a", "", length_from=lambda pkt: pkt.alen),
                    FieldLenField("blen", None, length_of="b", fmt="B"),
-                   StrLenField("b", "", length_from = lambda pkt: pkt.blen)]
+                   StrLenField("b", "", length_from=lambda pkt: pkt.blen)]
 
 
-## Char2 Curves
+# Char2 Curves
 
 class ECTrinomialBasis(Packet):
     name = "EC Trinomial Basis"
     val = 0
     fields_desc = [FieldLenField("klen", None, length_of="k", fmt="B"),
-                   StrLenField("k", "", length_from = lambda pkt: pkt.klen)]
+                   StrLenField("k", "", length_from=lambda pkt: pkt.klen)]
 
     def guess_payload_class(self, p):
         return Padding
@@ -459,13 +459,13 @@ class _ECBasisField(PacketField):
         return val
 
 
-## Distinct ECParameters
+# Distinct ECParameters
 ##
-## To support the different ECParameters structures defined in Sect. 5.4 of
-## RFC 4492, we define 3 separates classes for implementing the 3 associated
-## ServerECDHParams: ServerECDHNamedCurveParams, ServerECDHExplicitPrimeParams
-## and ServerECDHExplicitChar2Params (support for this one is only partial).
-## The most frequent encounter of the 3 is (by far) ServerECDHNamedCurveParams.
+# To support the different ECParameters structures defined in Sect. 5.4 of
+# RFC 4492, we define 3 separates classes for implementing the 3 associated
+# ServerECDHParams: ServerECDHNamedCurveParams, ServerECDHExplicitPrimeParams
+# and ServerECDHExplicitChar2Params (support for this one is only partial).
+# The most frequent encounter of the 3 is (by far) ServerECDHNamedCurveParams.
 
 class ServerECDHExplicitPrimeParams(_GenericTLSSessionInheritance):
     """
@@ -521,13 +521,13 @@ class ServerECDHExplicitChar2Params(_GenericTLSSessionInheritance):
                    PacketField("curve", ECCurvePkt(), ECCurvePkt),
                    FieldLenField("baselen", None, length_of="base", fmt="B"),
                    StrLenField("base", "",
-                               length_from = lambda pkt: pkt.baselen),
+                               length_from=lambda pkt: pkt.baselen),
                    ByteField("order", None),
                    ByteField("cofactor", None),
                    FieldLenField("pointlen", None,
                                  length_of="point", fmt="B"),
                    StrLenField("point", "",
-                               length_from = lambda pkt: pkt.pointlen)]
+                               length_from=lambda pkt: pkt.pointlen)]
 
     def fill_missing(self):
         if self.curve_type is None:
@@ -544,7 +544,7 @@ class ServerECDHNamedCurveParams(_GenericTLSSessionInheritance):
                    FieldLenField("pointlen", None,
                                  length_of="point", fmt="B"),
                    StrLenField("point", None,
-                               length_from = lambda pkt: pkt.pointlen)]
+                               length_from=lambda pkt: pkt.pointlen)]
 
     @crypto_validator
     def fill_missing(self):
@@ -597,8 +597,8 @@ class ServerECDHNamedCurveParams(_GenericTLSSessionInheritance):
         XXX Support compressed point format.
         XXX Check that the pubkey received is on the curve.
         """
-        #point_format = 0
-        #if self.point[0] in [b'\x02', b'\x03']:
+        # point_format = 0
+        # if self.point[0] in [b'\x02', b'\x03']:
         #    point_format = 1
 
         curve_name = _tls_named_curves[self.named_curve]
@@ -633,7 +633,7 @@ def _tls_server_ecdh_cls_guess(m):
     return _tls_server_ecdh_cls.get(curve_type, None)
 
 
-### RSA Encryption (export)
+# RSA Encryption (export)
 
 class ServerRSAParams(_GenericTLSSessionInheritance):
     """
@@ -646,10 +646,10 @@ class ServerRSAParams(_GenericTLSSessionInheritance):
     name = "Server RSA_EXPORT parameters"
     fields_desc = [FieldLenField("rsamodlen", None, length_of="rsamod"),
                    StrLenField("rsamod", "",
-                               length_from = lambda pkt: pkt.rsamodlen),
+                               length_from=lambda pkt: pkt.rsamodlen),
                    FieldLenField("rsaexplen", None, length_of="rsaexp"),
                    StrLenField("rsaexp", "",
-                               length_from = lambda pkt: pkt.rsaexplen)]
+                               length_from=lambda pkt: pkt.rsaexplen)]
 
     @crypto_validator
     def fill_missing(self):
@@ -659,11 +659,11 @@ class ServerRSAParams(_GenericTLSSessionInheritance):
         pubNum = k.pubkey.public_numbers()
 
         if not self.rsamod:
-            self.rsamod = pkcs_i2osp(pubNum.n, k.pubkey.key_size//8)
+            self.rsamod = pkcs_i2osp(pubNum.n, k.pubkey.key_size // 8)
         if self.rsamodlen is None:
             self.rsamodlen = len(self.rsamod)
 
-        rsaexplen = math.ceil(math.log(pubNum.e)/math.log(2)/8.)
+        rsaexplen = math.ceil(math.log(pubNum.e) / math.log(2) / 8.)
         if not self.rsaexp:
             self.rsaexp = pkcs_i2osp(pubNum.e, rsaexplen)
         if self.rsaexplen is None:
@@ -672,8 +672,8 @@ class ServerRSAParams(_GenericTLSSessionInheritance):
     @crypto_validator
     def register_pubkey(self):
         mLen = self.rsamodlen
-        m    = self.rsamod
-        e    = self.rsaexp
+        m = self.rsamod
+        e = self.rsaexp
         self.tls_session.server_tmp_rsa_key = PubKeyRSA((e, m, mLen))
 
     def post_dissection(self, pkt):
@@ -686,7 +686,7 @@ class ServerRSAParams(_GenericTLSSessionInheritance):
         return Padding
 
 
-### Pre-Shared Key
+# Pre-Shared Key
 
 class ServerPSKParams(Packet):
     """
@@ -712,10 +712,10 @@ class ServerPSKParams(Packet):
 
 
 ###############################################################################
-### Client Key Exchange value                                               ###
+#   Client Key Exchange value                                                 #
 ###############################################################################
 
-### FFDH/ECDH
+# FFDH/ECDH
 
 class ClientDiffieHellmanPublic(_GenericTLSSessionInheritance):
     """
@@ -738,7 +738,7 @@ class ClientDiffieHellmanPublic(_GenericTLSSessionInheritance):
         s.client_kx_privkey = params.generate_private_key()
         pubkey = s.client_kx_privkey.public_key()
         y = pubkey.public_numbers().y
-        self.dh_Yc = pkcs_i2osp(y, pubkey.key_size//8)
+        self.dh_Yc = pkcs_i2osp(y, pubkey.key_size // 8)
 
         if s.client_kx_privkey and s.server_kx_pubkey:
             pms = s.client_kx_privkey.exchange(s.server_kx_pubkey)
@@ -799,8 +799,8 @@ class ClientECDiffieHellmanPublic(_GenericTLSSessionInheritance):
         x = pubkey.public_numbers().x
         y = pubkey.public_numbers().y
         self.ecdh_Yc = (b"\x04" +
-                        pkcs_i2osp(x, params.key_size//8) +
-                        pkcs_i2osp(y, params.key_size//8))
+                        pkcs_i2osp(x, params.key_size // 8) +
+                        pkcs_i2osp(y, params.key_size // 8))
 
         if s.client_kx_privkey and s.server_kx_pubkey:
             pms = s.client_kx_privkey.exchange(ec.ECDH(), s.server_kx_pubkey)
@@ -832,7 +832,7 @@ class ClientECDiffieHellmanPublic(_GenericTLSSessionInheritance):
             s.compute_ms_and_derive_keys()
 
 
-### RSA Encryption (standard & export)
+# RSA Encryption (standard & export)
 
 class _UnEncryptedPreMasterSecret(Raw):
     """
@@ -870,7 +870,7 @@ class EncryptedPreMasterSecret(_GenericTLSSessionInheritance):
             if len(m) < 2:      # Should not happen
                 return m
             l = struct.unpack("!H", m[:2])[0]
-            if len(m) != l+2:
+            if len(m) != l + 2:
                 err = "TLS 1.0+, but RSA Encrypted PMS with no explicit length"
                 warning(err)
             else:
@@ -884,7 +884,7 @@ class EncryptedPreMasterSecret(_GenericTLSSessionInheritance):
             pms = decrypted[-48:]
         else:
             # the dispatch_hook is supposed to prevent this case
-            pms = b"\x00"*48
+            pms = b"\x00" * 48
             err = "No server RSA key to decrypt Pre Master Secret. Skipping."
             warning(err)
 

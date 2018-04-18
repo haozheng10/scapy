@@ -1,19 +1,17 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
-## Copyright (C) 2005  Guillaume Valadon <guedou@hongo.wide.ad.jp>
-##                     Arnaud Ebalard <arnaud.ebalard@eads.net>
+# Copyright (C) 2005  Guillaume Valadon <guedou@hongo.wide.ad.jp>
+#                     Arnaud Ebalard <arnaud.ebalard@eads.net>
 
 """
 Routing and network interface handling for IPv6.
 """
 
 #############################################################################
-#############################################################################
-###                      Routing/Interfaces stuff                         ###
-#############################################################################
+#                        Routing/Interfaces stuff                           #
 #############################################################################
 
 from __future__ import absolute_import
@@ -52,11 +50,11 @@ class Route6:
         rtlst = []
 
         for net, msk, gw, iface, cset, metric in self.routes:
-            rtlst.append(('%s/%i'% (net, msk), gw, (iface if isinstance(iface, six.string_types) else iface.name), ", ".join(cset) if len(cset) > 0 else "", str(metric)))
+            rtlst.append(('%s/%i' % (net, msk), gw, (iface if isinstance(iface, six.string_types) else iface.name), ", ".join(cset) if len(cset) > 0 else "", str(metric)))
 
         return pretty_list(rtlst,
                            [('Destination', 'Next Hop', "Iface", "Src candidates", "Metric")],
-                           sortBy = 1)
+                           sortBy=1)
 
     # Unlike Scapy's Route.make_route() function, we do not have 'host' and 'net'
     # parameters. We only have a 'dst' parameter that accepts 'prefix' and
@@ -65,7 +63,7 @@ class Route6:
     def make_route(self, dst, gw=None, dev=None):
         """Internal function : create a route for 'dst' via 'gw'.
         """
-        prefix, plen = (dst.split("/")+["128"])[:2]
+        prefix, plen = (dst.split("/") + ["128"])[:2]
         plen = int(plen)
 
         if gw is None:
@@ -96,7 +94,7 @@ class Route6:
         delt(dst="2001:db8:cafe:f000::/56")
         delt(dst="2001:db8:cafe:f000::/56", gw="2001:db8:deca::1")
         """
-        tmp = dst+"/128"
+        tmp = dst + "/128"
         dst, plen = tmp.split('/')[:2]
         dst = in6_ptop(dst)
         plen = int(plen)
@@ -109,12 +107,12 @@ class Route6:
         elif len(l) > 1:
             warning("Found more than one match. Aborting.")
         else:
-            i=self.routes.index(l[0])
+            i = self.routes.index(l[0])
             self.invalidate_cache()
             del(self.routes[i])
 
     def ifchange(self, iff, addr):
-        the_addr, the_plen = (addr.split("/")+["128"])[:2]
+        the_addr, the_plen = (addr.split("/") + ["128"])[:2]
         the_plen = int(the_plen)
 
         naddr = inet_pton(socket.AF_INET6, the_addr)
@@ -134,7 +132,7 @@ class Route6:
 
     def ifdel(self, iff):
         """ removes all route entries that uses 'iff' interface. """
-        new_routes=[]
+        new_routes = []
         for rt in self.routes:
             if rt[3] != iff:
                 new_routes.append(rt)
@@ -154,7 +152,7 @@ class Route6:
             prefix length value can be omitted. In that case, a value of 128
             will be used.
         """
-        addr, plen = (addr.split("/")+["128"])[:2]
+        addr, plen = (addr.split("/") + ["128"])[:2]
         addr = in6_ptop(addr)
         plen = int(plen)
         naddr = inet_pton(socket.AF_INET6, addr)
@@ -180,12 +178,12 @@ class Route6:
         """
         # Transform "2001:db8:cafe:*::1-5:0/120" to one IPv6 address of the set
         dst = dst.split("/")[0]
-        savedst = dst # In case following inet_pton() fails
+        savedst = dst  # In case following inet_pton() fails
         dst = dst.replace("*", "0")
         l = dst.find("-")
         while l >= 0:
-            m = (dst[l:]+":").find(":")
-            dst = dst[:l]+dst[l+m:]
+            m = (dst[l:] + ":").find(":")
+            dst = dst[:l] + dst[l + m:]
             l = dst.find("-")
 
         try:
@@ -230,7 +228,7 @@ class Route6:
         pathes = [x for x in pathes if x[0] == best_plen]
 
         res = []
-        for p in pathes: # Here we select best source address for every route
+        for p in pathes:  # Here we select best source address for every route
             tmp = p[2]
             srcaddr = get_source_addr_from_candidate_set(dst, tmp[1])
             if srcaddr is not None:

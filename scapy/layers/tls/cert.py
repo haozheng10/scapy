@@ -1,8 +1,8 @@
-## This file is part of Scapy
-## Copyright (C) 2008 Arnaud Ebalard <arnaud.ebalard@eads.net>
-##                                   <arno@natisbad.org>
-##   2015, 2016, 2017 Maxence Tury   <maxence.tury@ssi.gouv.fr>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2008 Arnaud Ebalard <arnaud.ebalard@eads.net>
+#                                   <arno@natisbad.org>
+#   2015, 2016, 2017 Maxence Tury   <maxence.tury@ssi.gouv.fr>
+# This program is published under a GPLv2 license
 
 """
 High-level methods for PKI objects (X.509 certificates, CRLs, asymmetric keys).
@@ -57,9 +57,9 @@ from scapy.compat import *
 
 # Maximum allowed size in bytes for a certificate file, to avoid
 # loading huge file when importing a cert
-_MAX_KEY_SIZE = 50*1024
-_MAX_CERT_SIZE = 50*1024
-_MAX_CRL_SIZE = 10*1024*1024   # some are that big
+_MAX_KEY_SIZE = 50 * 1024
+_MAX_CERT_SIZE = 50 * 1024
+_MAX_CRL_SIZE = 10 * 1024 * 1024   # some are that big
 
 
 #####################################################################
@@ -72,7 +72,7 @@ def der2pem(der_string, obj="UNKNOWN"):
     # Encode a byte string in PEM format. Header advertizes <obj> type.
     pem_string = ("-----BEGIN %s-----\n" % obj).encode()
     base64_string = base64.b64encode(der_string)
-    chunks = [base64_string[i:i+64] for i in range(0, len(base64_string), 64)]
+    chunks = [base64_string[i:i + 64] for i in range(0, len(base64_string), 64)]
     pem_string += b'\n'.join(chunks)
     pem_string += ("\n-----END %s-----\n" % obj).encode()
     return pem_string
@@ -113,7 +113,7 @@ class _PKIObj(object):
     def __init__(self, frmt, der, pem):
         # Note that changing attributes of the _PKIObj does not update these
         # values (e.g. modifying k.modulus does not change k.der).
-        #XXX use __setattr__ for this
+        # XXX use __setattr__ for this
         self.frmt = frmt
         self.der = der
         self.pem = pem
@@ -294,8 +294,8 @@ class PubKeyRSA(PubKey, _EncryptAndVerifyRSA):
         self.der = pem2der(self.pem)
 
     def import_from_asn1pkt(self, pubkey):
-        modulus    = pubkey.modulus.val
-        pubExp     = pubkey.publicExponent.val
+        modulus = pubkey.modulus.val
+        pubExp = pubkey.publicExponent.val
         self.fill_and_store(modulus=modulus, pubExp=pubExp)
 
     def encrypt(self, msg, t="pkcs", h="sha256", mgf=None, L=None):
@@ -490,13 +490,13 @@ class PrivKeyRSA(PrivKey, _EncryptAndVerifyRSA, _DecryptAndSignRSA):
         self._pubExp = pubNum.e
 
     def import_from_asn1pkt(self, privkey):
-        modulus     = privkey.modulus.val
-        pubExp      = privkey.publicExponent.val
-        privExp     = privkey.privateExponent.val
-        prime1      = privkey.prime1.val
-        prime2      = privkey.prime2.val
-        exponent1   = privkey.exponent1.val
-        exponent2   = privkey.exponent2.val
+        modulus = privkey.modulus.val
+        pubExp = privkey.publicExponent.val
+        privExp = privkey.privateExponent.val
+        prime1 = privkey.prime1.val
+        prime2 = privkey.prime2.val
+        exponent1 = privkey.exponent1.val
+        exponent2 = privkey.exponent2.val
         coefficient = privkey.coefficient.val
         self.fill_and_store(modulus=modulus, pubExp=pubExp,
                             privExp=privExp, prime1=prime1, prime2=prime2,
@@ -700,7 +700,7 @@ class Cert(six.with_metaclass(_CertMaker, object)):
 
         now = time.mktime(now)
         nft = time.mktime(self.notAfter)
-        diff = (nft - now)/(24.*3600)
+        diff = (nft - now) / (24. * 3600)
         return diff
 
     def isRevoked(self, crl_list):
@@ -989,7 +989,7 @@ class Chain(list):
         idx = 1
         while idx <= llen:
             c = self[idx]
-            s += "%s\_ %s" % (" "*idx*2, c.subject_str)
+            s += "%s\_ %s" % (" " * idx * 2, c.subject_str)
             if idx != llen:
                 s += "\n"
             idx += 1

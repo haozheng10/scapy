@@ -49,8 +49,8 @@ class CARP(Packet):
 
         return pkt
 
-    def build_hmac_sha1(self, pw = b'\x00' * 20, ip4l=[], ip6l=[]):
-        h = hmac.new(pw, digestmod = hashlib.sha1)
+    def build_hmac_sha1(self, pw=b'\x00' * 20, ip4l=[], ip6l=[]):
+        h = hmac.new(pw, digestmod=hashlib.sha1)
         # XXX: this is a dirty hack. it needs to pack version and type into a single 8bit field
         h.update(b'\x21')
         # XXX: mac addy if different from special link layer. comes before vhid
@@ -72,7 +72,7 @@ class CARP(Packet):
 
 warning("CARP overwrites VRRP !")
 # This cancel the bindings done in vrrp.py
-split_layers(IP,            VRRP,          proto=IPPROTO_VRRP)
-split_layers(IP,            VRRPv3,        proto=IPPROTO_VRRP)
+split_layers(IP, VRRP, proto=IPPROTO_VRRP)
+split_layers(IP, VRRPv3, proto=IPPROTO_VRRP)
 # CARP bindings
 bind_layers(IP, CARP, proto=112, dst='224.0.0.18')

@@ -95,7 +95,7 @@ class VTPVlanInfoTlv(Packet):
 class VTPVlanInfo(Packet):
     name = "VTP VLAN Info"
     fields_desc = [
-        ByteField("len", None), # FIXME: compute length
+        ByteField("len", None),  # FIXME: compute length
         ByteEnumField("status", 0, {0: "active", 1: "suspended"}),
         ByteEnumField("type", 1, _VTP_VLAN_TYPE),
         FieldLenField("vlannamelen", None, "vlanname", "B"),
@@ -161,17 +161,17 @@ class VTP(Packet):
                          lambda pkt:pkt.code == 1 or
                          pkt.code == 2),
         # updater identity
-                    ConditionalField(IPField("uid", "192.168.0.1"),
-                                     lambda pkt:pkt.code == 1),
-                    ConditionalField(VTPTimeStampField("timestamp", '930301000000'),
-                                     lambda pkt:pkt.code == 1),
-                    ConditionalField(StrFixedLenField("md5", b"\x00" * 16, 16),
-                                     lambda pkt:pkt.code == 1),
-                    ConditionalField(
-                        PacketListField("vlaninfo", [], VTPVlanInfo),
-                        lambda pkt: pkt.code == 2),
-                    ConditionalField(ShortField("startvalue", 0),
-                                     lambda pkt:pkt.code == 3)
+        ConditionalField(IPField("uid", "192.168.0.1"),
+                         lambda pkt:pkt.code == 1),
+        ConditionalField(VTPTimeStampField("timestamp", '930301000000'),
+                         lambda pkt:pkt.code == 1),
+        ConditionalField(StrFixedLenField("md5", b"\x00" * 16, 16),
+                         lambda pkt:pkt.code == 1),
+        ConditionalField(
+            PacketListField("vlaninfo", [], VTPVlanInfo),
+            lambda pkt: pkt.code == 2),
+        ConditionalField(ShortField("startvalue", 0),
+                         lambda pkt:pkt.code == 3)
     ]
 
     def post_build(self, p, pay):

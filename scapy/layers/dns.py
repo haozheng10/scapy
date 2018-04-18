@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 DNS: Domain Name System.
@@ -41,7 +41,7 @@ class DNSStrField(StrField):
 
     def i2m(self, pkt, x):
         if x == b".":
-          return b"\x00"
+            return b"\x00"
 
         # Truncate chunks that cannot be encoded (more than 63 bytes..)
         x = b"".join(chb(len(y)) + y for y in (k[:63] for k in x.split(b".")))
@@ -106,13 +106,13 @@ def DNSgetstr(s, p):
     jpath = [p]
     while True:
         if p >= len(s):
-            warning("DNS RR prematured end (ofs=%i, len=%i)"%(p, len(s)))
+            warning("DNS RR prematured end (ofs=%i, len=%i)" % (p, len(s)))
             break
-        l = orb(s[p]) # current value of the string at p
+        l = orb(s[p])  # current value of the string at p
         p += 1
-        if l & 0xc0: # Pointer label
+        if l & 0xc0:  # Pointer label
             if not q:
-                q = p+1
+                q = p + 1
             if p >= len(s):
                 warning("DNS incomplete jump token at (ofs=%i)" % p)
                 break
@@ -122,8 +122,8 @@ def DNSgetstr(s, p):
                 break
             jpath.append(p)
             continue
-        elif l > 0: # Label
-            name += s[p:p+l] + b"."
+        elif l > 0:  # Label
+            name += s[p:p + l] + b"."
             p += l
             continue
         break
@@ -147,17 +147,17 @@ class DNSRRField(StrField):
         return raw(x)
 
     def decodeRR(self, name, s, p):
-        ret = s[p:p+10]
+        ret = s[p:p + 10]
         type, cls, ttl, rdlen = struct.unpack("!HHIH", ret)
         p += 10
-        rr = DNSRR(b"\x00"+ret+s[p:p+rdlen], _orig_s=s, _orig_p=p)
+        rr = DNSRR(b"\x00" + ret + s[p:p + rdlen], _orig_s=s, _orig_p=p)
         if type in [2, 3, 4, 5]:
             rr.rdata = DNSgetstr(s, p)[0]
             del(rr.rdlen)
         elif type in DNSRR_DISPATCHER:
-            rr = DNSRR_DISPATCHER[type](b"\x00"+ret+s[p:p+rdlen], _orig_s=s, _orig_p=p)
+            rr = DNSRR_DISPATCHER[type](b"\x00" + ret + s[p:p + rdlen], _orig_s=s, _orig_p=p)
         else:
-          del(rr.rdlen)
+            del(rr.rdlen)
 
         p += rdlen
 
@@ -190,9 +190,9 @@ class DNSRRField(StrField):
 
 class DNSQRField(DNSRRField):
     def decodeRR(self, name, s, p):
-        ret = s[p:p+4]
+        ret = s[p:p + 4]
         p += 4
-        rr = DNSQR(b"\x00"+ret, _orig_s=s, _orig_p=p)
+        rr = DNSQR(b"\x00" + ret, _orig_s=s, _orig_p=p)
         rr.qname = name
         return rr, p
 
@@ -200,19 +200,19 @@ class DNSQRField(DNSRRField):
 class RDataField(StrLenField):
     def m2i(self, pkt, s):
         family = None
-        if pkt.type == 1: # A
+        if pkt.type == 1:  # A
             family = socket.AF_INET
-        elif pkt.type in [2, 5, 12]: # NS, CNAME, PTR
+        elif pkt.type in [2, 5, 12]:  # NS, CNAME, PTR
             l = orb(s[0])
-            if l & 0xc0 and hasattr(pkt, "_orig_s") and pkt._orig_s: # Compression detected
+            if l & 0xc0 and hasattr(pkt, "_orig_s") and pkt._orig_s:  # Compression detected
                 p = ((l & ~0xc0) << 8) + orb(s[1]) - 12
                 s = DNSgetstr(pkt._orig_s, p)[0]
-            else: # No compression / Cannot decompress
+            else:  # No compression / Cannot decompress
                 if hasattr(pkt, "_orig_s") and pkt._orig_s:
                     s = DNSgetstr(pkt._orig_s, pkt._orig_p)[0]
                 else:
                     s = DNSgetstr(s, 0)[0]
-        elif pkt.type == 16: # TXT
+        elif pkt.type == 16:  # TXT
             ret_s = b""
             tmp_s = s
             # RDATA contains a list of strings, each are prepended with
@@ -220,25 +220,25 @@ class RDataField(StrLenField):
             while tmp_s:
                 tmp_len = orb(tmp_s[0]) + 1
                 if tmp_len > len(tmp_s):
-                  warning("DNS RR TXT prematured end of character-string (size=%i, remaining bytes=%i)" % (tmp_len, len(tmp_s)))
+                    warning("DNS RR TXT prematured end of character-string (size=%i, remaining bytes=%i)" % (tmp_len, len(tmp_s)))
                 ret_s += tmp_s[1:tmp_len]
                 tmp_s = tmp_s[tmp_len:]
             s = ret_s
-        elif pkt.type == 28: # AAAA
+        elif pkt.type == 28:  # AAAA
             family = socket.AF_INET6
         if family is not None:
             s = inet_ntop(family, s)
         return s
 
     def i2m(self, pkt, s):
-        if pkt.type == 1: # A
+        if pkt.type == 1:  # A
             if s:
                 s = inet_pton(socket.AF_INET, s)
-        elif pkt.type in [2, 3, 4, 5, 12]: # NS, MD, MF, CNAME, PTR
+        elif pkt.type in [2, 3, 4, 5, 12]:  # NS, MD, MF, CNAME, PTR
             s = b"".join(chb(len(x)) + x for x in s.split(b'.'))
             if orb(s[-1]):
                 s += b"\x00"
-        elif pkt.type == 16: # TXT
+        elif pkt.type == 16:  # TXT
             if s:
                 s = raw(s)
                 ret_s = b""
@@ -251,7 +251,7 @@ class RDataField(StrLenField):
                 if len(s):
                     ret_s += struct.pack("!B", len(s)) + s
                 s = ret_s
-        elif pkt.type == 28: # AAAA
+        elif pkt.type == 28:  # AAAA
             if s:
                 s = inet_pton(socket.AF_INET6, s)
         return s
@@ -349,12 +349,12 @@ dnstypes = {
 
 dnsqtypes = {251: "IXFR", 252: "AXFR", 253: "MAILB", 254: "MAILA", 255: "ALL"}
 dnsqtypes.update(dnstypes)
-dnsclasses =  {1: 'IN',  2: 'CS',  3: 'CH',  4: 'HS',  255: 'ANY'}
+dnsclasses = {1: 'IN', 2: 'CS', 3: 'CH', 4: 'HS', 255: 'ANY'}
 
 
 class DNSQR(InheritOriginDNSStrPacket):
     name = "DNS Question Record"
-    show_indent=0
+    show_indent = 0
     fields_desc = [DNSStrField("qname", "www.example.com"),
                    ShortEnumField("qtype", 1, dnsqtypes),
                    ShortEnumField("qclass", 1, dnsclasses)]
@@ -398,7 +398,7 @@ dnssecalgotypes = {0: "Reserved", 1: "RSA/MD5", 2: "Diffie-Hellman", 3: "DSA/SHA
                    254: "Private algorithms - OID", 255: "Reserved"}
 
 # 09/2013 from http://www.iana.org/assignments/ds-rr-types/ds-rr-types.xhtml
-dnssecdigesttypes = {0: "Reserved", 1: "SHA-1", 2: "SHA-256", 3: "GOST R 34.11-94",  4: "SHA-384"}
+dnssecdigesttypes = {0: "Reserved", 1: "SHA-1", 2: "SHA-256", 3: "GOST R 34.11-94", 4: "SHA-384"}
 
 
 class TimeField(IntField):
@@ -432,15 +432,15 @@ def bitmap2RRlist(bitmap):
             warning("bitmap too short (%i)" % len(bitmap))
             return
 
-        window_block = orb(bitmap[0]) # window number
-        offset = 256 * window_block # offset of the Resource Record
-        bitmap_len = orb(bitmap[1]) # length of the bitmap in bytes
+        window_block = orb(bitmap[0])  # window number
+        offset = 256 * window_block  # offset of the Resource Record
+        bitmap_len = orb(bitmap[1])  # length of the bitmap in bytes
 
         if bitmap_len <= 0 or bitmap_len > 32:
             warning("bitmap length is no valid (%i)" % bitmap_len)
             return
 
-        tmp_bitmap = bitmap[2:2+bitmap_len]
+        tmp_bitmap = bitmap[2:2 + bitmap_len]
 
         # Let's compare each bit of tmp_bitmap and compute the real RR value
         for b in range(len(tmp_bitmap)):
@@ -448,11 +448,11 @@ def bitmap2RRlist(bitmap):
             for i in range(8):
                 if orb(tmp_bitmap[b]) & v:
                     # each of the RR is encoded as a bit
-                    RRlist += [offset + b*8 + i]
+                    RRlist += [offset + b * 8 + i]
                 v = v >> 1
 
         # Next block if any
-        bitmap = bitmap[2+bitmap_len:]
+        bitmap = bitmap[2 + bitmap_len:]
 
     return RRlist
 
@@ -475,7 +475,7 @@ def RRlist2bitmap(lst):
     if min_window_blocks == max_window_blocks:
         max_window_blocks += 1
 
-    for wb in range(min_window_blocks, max_window_blocks+1):
+    for wb in range(min_window_blocks, max_window_blocks + 1):
         # First, filter out RR not encoded in the current window block
         # i.e. keep everything between 256*wb <= 256*(wb+1)
         rrlist = sorted(x for x in lst if 256 * wb <= x < 256 * (wb + 1))
@@ -483,12 +483,12 @@ def RRlist2bitmap(lst):
             continue
 
         # Compute the number of bytes used to store the bitmap
-        if rrlist[-1] == 0: # only one element in the list
+        if rrlist[-1] == 0:  # only one element in the list
             bytes_count = 1
         else:
-            max = rrlist[-1] - 256*wb
+            max = rrlist[-1] - 256 * wb
             bytes_count = int(math.ceil(max // 8)) + 1  # use at least 1 byte
-        if bytes_count > 32: # Don't encode more than 256 bits / values
+        if bytes_count > 32:  # Don't encode more than 256 bits / values
             bytes_count = 32
 
         bitmap += struct.pack("BB", wb, bytes_count)
@@ -530,7 +530,7 @@ class _DNSRRdummy(InheritOriginDNSStrPacket):
 
         lrrname = len(self.fields_desc[0].i2m("", self.getfieldval("rrname")))
         l = len(pkt) - lrrname - 10
-        pkt = pkt[:lrrname+8] + struct.pack("!H", l) + pkt[lrrname+8+2:]
+        pkt = pkt[:lrrname + 8] + struct.pack("!H", l) + pkt[lrrname + 8 + 2:]
 
         return pkt
 
@@ -618,9 +618,9 @@ class DNSRRDLV(DNSRRDS):
     name = "DNS DLV Resource Record"
 
     def __init__(self, *args, **kargs):
-       DNSRRDS.__init__(self, *args, **kargs)
-       if not kargs.get('type', 0):
-           self.type = 32769
+        DNSRRDS.__init__(self, *args, **kargs)
+        if not kargs.get('type', 0):
+            self.type = 32769
 
 # RFC 5155 - DNS Security (DNSSEC) Hashed Authenticated Denial of Existence
 
@@ -743,7 +743,7 @@ DNSRR_DISPATCHER = {
     47: DNSRRNSEC,       # RFC 4034
     48: DNSRRDNSKEY,     # RFC 4034
     50: DNSRRNSEC3,      # RFC 5155
-    51: DNSRRNSEC3PARAM, # RFC 5155
+    51: DNSRRNSEC3PARAM,  # RFC 5155
     250: DNSRRTSIG,      # RFC 2845
     32769: DNSRRDLV,     # RFC 4431
 }
@@ -757,7 +757,7 @@ def isdnssecRR(obj):
 
 class DNSRR(InheritOriginDNSStrPacket):
     name = "DNS Resource Record"
-    show_indent=0
+    show_indent = 0
     fields_desc = [DNSStrField("rrname", ""),
                    ShortEnumField("type", 1, dnstypes),
                    ShortEnumField("rclass", 1, dnsclasses),
@@ -784,12 +784,12 @@ dyndns_add(nameserver, name, rdata, type="A", ttl=10) -> result code (0=ok)
 example: dyndns_add("ns1.toto.com", "dyn.toto.com", "127.0.0.1")
 RFC2136
 """
-    zone = name[name.find(".")+1:]
-    r=sr1(IP(dst=nameserver)/UDP()/DNS(opcode=5,
-                                       qd=[DNSQR(qname=zone, qtype="SOA")],
-                                       ns=[DNSRR(rrname=name, type="A",
-                                                 ttl=ttl, rdata=rdata)]),
-          verbose=0, timeout=5)
+    zone = name[name.find(".") + 1:]
+    r = sr1(IP(dst=nameserver) / UDP() / DNS(opcode=5,
+                                             qd=[DNSQR(qname=zone, qtype="SOA")],
+                                             ns=[DNSRR(rrname=name, type="A",
+                                                       ttl=ttl, rdata=rdata)]),
+            verbose=0, timeout=5)
     if r and r.haslayer(DNS):
         return r.getlayer(DNS).rcode
     else:
@@ -804,12 +804,12 @@ dyndns_del(nameserver, name, type="ANY", ttl=10) -> result code (0=ok)
 example: dyndns_del("ns1.toto.com", "dyn.toto.com")
 RFC2136
 """
-    zone = name[name.find(".")+1:]
-    r=sr1(IP(dst=nameserver)/UDP()/DNS(opcode=5,
-                                       qd=[DNSQR(qname=zone, qtype="SOA")],
-                                       ns=[DNSRR(rrname=name, type=type,
-                                                 rclass="ANY", ttl=0, rdata="")]),
-          verbose=0, timeout=5)
+    zone = name[name.find(".") + 1:]
+    r = sr1(IP(dst=nameserver) / UDP() / DNS(opcode=5,
+                                             qd=[DNSQR(qname=zone, qtype="SOA")],
+                                             ns=[DNSRR(rrname=name, type=type,
+                                                       rclass="ANY", ttl=0, rdata="")]),
+            verbose=0, timeout=5)
     if r and r.haslayer(DNS):
         return r.getlayer(DNS).rcode
     else:
@@ -817,7 +817,7 @@ RFC2136
 
 
 class DNS_am(AnsweringMachine):
-    function_name="dns_spoof"
+    function_name = "dns_spoof"
     filter = "udp port 53"
 
     def parse_options(self, joker="192.168.1.1", match=None):
@@ -825,7 +825,7 @@ class DNS_am(AnsweringMachine):
             self.match = {}
         else:
             self.match = match
-        self.joker=joker
+        self.joker = joker
 
     def is_request(self, req):
         return req.haslayer(DNS) and req.getlayer(DNS).qr == 0
@@ -833,7 +833,7 @@ class DNS_am(AnsweringMachine):
     def make_reply(self, req):
         ip = req.getlayer(IP)
         dns = req.getlayer(DNS)
-        resp = IP(dst=ip.src, src=ip.dst)/UDP(dport=ip.sport, sport=ip.dport)
+        resp = IP(dst=ip.src, src=ip.dst) / UDP(dport=ip.sport, sport=ip.dport)
         rdata = self.match.get(dns.qd.qname, self.joker)
         resp /= DNS(id=dns.id, qr=1, qd=dns.qd,
                     an=DNSRR(rrname=dns.qd.qname, ttl=10, rdata=rdata))

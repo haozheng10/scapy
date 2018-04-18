@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Wireless LAN according to IEEE 802.11.
@@ -31,7 +31,7 @@ else:
     log_loading.info("Can't import python-cryptography v1.7+. Disabled WEP decryption/encryption. (Dot11)")
 
 
-### Layers
+# Layers
 
 
 class PrismHeader(Packet):
@@ -93,22 +93,22 @@ class RadioTap(Packet):
     name = "RadioTap dummy"
     fields_desc = [ByteField('version', 0),
                    ByteField('pad', 0),
-                   FieldLenField('len', None, 'notdecoded', '<H', adjust=lambda pkt, x:x+8),
+                   FieldLenField('len', None, 'notdecoded', '<H', adjust=lambda pkt, x:x + 8),
                    FlagsField('present', None, -32, ['TSFT', 'Flags', 'Rate', 'Channel', 'FHSS', 'dBm_AntSignal',
                                                      'dBm_AntNoise', 'Lock_Quality', 'TX_Attenuation', 'dB_TX_Attenuation',
                                                      'dBm_TX_Power', 'Antenna', 'dB_AntSignal', 'dB_AntNoise',
                                                      'b14', 'b15', 'b16', 'b17', 'b18', 'b19', 'b20', 'b21', 'b22', 'b23',
                                                      'b24', 'b25', 'b26', 'b27', 'b28', 'b29', 'b30', 'Ext']),
-                   StrLenField('notdecoded', "", length_from= lambda pkt:pkt.len-8)]
+                   StrLenField('notdecoded', "", length_from=lambda pkt:pkt.len - 8)]
 
 
 class PPI(Packet):
     name = "Per-Packet Information header (partial)"
     fields_desc = [ByteField("version", 0),
                    ByteField("flags", 0),
-                   FieldLenField("len", None, fmt="<H", length_of="notdecoded", adjust=lambda pkt, x:x+8),
+                   FieldLenField("len", None, fmt="<H", length_of="notdecoded", adjust=lambda pkt, x:x + 8),
                    LEIntField("dlt", 0),
-                   StrLenField("notdecoded", "", length_from = lambda pkt:pkt.len-8)
+                   StrLenField("notdecoded", "", length_from=lambda pkt:pkt.len - 8)
                    ]
 
 
@@ -136,7 +136,7 @@ class Dot11(Packet):
         ConditionalField(
             MACField("addr4", ETHER_ANY),
             lambda pkt: (pkt.type == 2 and
-                         pkt.FCfield & 3 == 3),  ## from-DS+to-DS
+                         pkt.FCfield & 3 == 3),  # from-DS+to-DS
         ),
     ]
 
@@ -153,18 +153,18 @@ class Dot11(Packet):
 
     def answers(self, other):
         if isinstance(other, Dot11):
-            if self.type == 0: # management
-                if self.addr1.lower() != other.addr2.lower(): # check resp DA w/ req SA
+            if self.type == 0:  # management
+                if self.addr1.lower() != other.addr2.lower():  # check resp DA w/ req SA
                     return 0
                 if (other.subtype, self.subtype) in [(0, 1), (2, 3), (4, 5)]:
                     return 1
-                if self.subtype == other.subtype == 11: # auth
+                if self.subtype == other.subtype == 11:  # auth
                     return self.payload.answers(other.payload)
-            elif self.type == 1: # control
+            elif self.type == 1:  # control
                 return 0
-            elif self.type == 2: # data
+            elif self.type == 2:  # data
                 return self.payload.answers(other.payload)
-            elif self.type == 3: # reserved
+            elif self.type == 3:  # reserved
                 return 0
         return 0
 
@@ -173,7 +173,7 @@ class Dot11(Packet):
             if warn:
                 warning("No WEP to remove")
             return
-        if  isinstance(self.payload.payload, NoPayload):
+        if isinstance(self.payload.payload, NoPayload):
             if key or conf.wepkey:
                 self.payload.decrypt(key)
             if isinstance(self.payload.payload, NoPayload):
@@ -181,7 +181,7 @@ class Dot11(Packet):
                     warning("Dot11 can't be decrypted. Check conf.wepkey.")
                 return
         self.FCfield &= ~0x40
-        self.payload=self.payload.payload
+        self.payload = self.payload.payload
 
 
 class Dot11QoS(Packet):
@@ -291,7 +291,7 @@ class Dot11Auth(Packet):
                    LEShortEnumField("status", 0, status_code)]
 
     def answers(self, other):
-        if self.seqnum == other.seqnum+1:
+        if self.seqnum == other.seqnum + 1:
             return 1
         return 0
 
@@ -358,32 +358,32 @@ class Dot11Ack(Packet):
     name = "802.11 Ack packet"
 
 
-bind_layers(PrismHeader,   Dot11,)
-bind_layers(RadioTap,      Dot11,)
-bind_layers(PPI,           Dot11,         dlt=105)
-bind_layers(Dot11,         LLC,           type=2)
-bind_layers(Dot11QoS,      LLC,)
-bind_layers(Dot11,         Dot11AssoReq,    subtype=0, type=0)
-bind_layers(Dot11,         Dot11AssoResp,   subtype=1, type=0)
-bind_layers(Dot11,         Dot11ReassoReq,  subtype=2, type=0)
-bind_layers(Dot11,         Dot11ReassoResp, subtype=3, type=0)
-bind_layers(Dot11,         Dot11ProbeReq,   subtype=4, type=0)
-bind_layers(Dot11,         Dot11ProbeResp,  subtype=5, type=0)
-bind_layers(Dot11,         Dot11Beacon,     subtype=8, type=0)
-bind_layers(Dot11,         Dot11ATIM,       subtype=9, type=0)
-bind_layers(Dot11,         Dot11Disas,      subtype=10, type=0)
-bind_layers(Dot11,         Dot11Auth,       subtype=11, type=0)
-bind_layers(Dot11,         Dot11Deauth,     subtype=12, type=0)
-bind_layers(Dot11,         Dot11Ack,        subtype=13, type=1)
-bind_layers(Dot11Beacon,     Dot11Elt,)
-bind_layers(Dot11AssoReq,    Dot11Elt,)
-bind_layers(Dot11AssoResp,   Dot11Elt,)
-bind_layers(Dot11ReassoReq,  Dot11Elt,)
+bind_layers(PrismHeader, Dot11,)
+bind_layers(RadioTap, Dot11,)
+bind_layers(PPI, Dot11, dlt=105)
+bind_layers(Dot11, LLC, type=2)
+bind_layers(Dot11QoS, LLC,)
+bind_layers(Dot11, Dot11AssoReq, subtype=0, type=0)
+bind_layers(Dot11, Dot11AssoResp, subtype=1, type=0)
+bind_layers(Dot11, Dot11ReassoReq, subtype=2, type=0)
+bind_layers(Dot11, Dot11ReassoResp, subtype=3, type=0)
+bind_layers(Dot11, Dot11ProbeReq, subtype=4, type=0)
+bind_layers(Dot11, Dot11ProbeResp, subtype=5, type=0)
+bind_layers(Dot11, Dot11Beacon, subtype=8, type=0)
+bind_layers(Dot11, Dot11ATIM, subtype=9, type=0)
+bind_layers(Dot11, Dot11Disas, subtype=10, type=0)
+bind_layers(Dot11, Dot11Auth, subtype=11, type=0)
+bind_layers(Dot11, Dot11Deauth, subtype=12, type=0)
+bind_layers(Dot11, Dot11Ack, subtype=13, type=1)
+bind_layers(Dot11Beacon, Dot11Elt,)
+bind_layers(Dot11AssoReq, Dot11Elt,)
+bind_layers(Dot11AssoResp, Dot11Elt,)
+bind_layers(Dot11ReassoReq, Dot11Elt,)
 bind_layers(Dot11ReassoResp, Dot11Elt,)
-bind_layers(Dot11ProbeReq,   Dot11Elt,)
-bind_layers(Dot11ProbeResp,  Dot11Elt,)
-bind_layers(Dot11Auth,       Dot11Elt,)
-bind_layers(Dot11Elt,        Dot11Elt,)
+bind_layers(Dot11ProbeReq, Dot11Elt,)
+bind_layers(Dot11ProbeResp, Dot11Elt,)
+bind_layers(Dot11Auth, Dot11Elt,)
+bind_layers(Dot11Elt, Dot11Elt,)
 
 
 conf.l2types.register(DLT_IEEE802_11, Dot11)
@@ -444,17 +444,17 @@ iwconfig wlan0 mode managed
         tcp = p.getlayer(TCP)
         pay = raw(tcp.payload)
         del(p.payload.payload.payload)
-        p.FCfield="from-DS"
+        p.FCfield = "from-DS"
         p.addr1, p.addr2 = p.addr2, p.addr1
         p /= IP(src=ip.dst, dst=ip.src)
         p /= TCP(sport=tcp.dport, dport=tcp.sport,
-                 seq=tcp.ack, ack=tcp.seq+len(pay),
+                 seq=tcp.ack, ack=tcp.seq + len(pay),
                  flags="PA")
         q = p.copy()
         p /= self.replace
         q.ID += 1
-        q.getlayer(TCP).flags="RA"
-        q.getlayer(TCP).seq+=len(self.replace)
+        q.getlayer(TCP).flags = "RA"
+        q.getlayer(TCP).seq += len(self.replace)
         return [p, q]
 
     def print_reply(self, query, *reply):
@@ -484,7 +484,7 @@ class Dot11PacketList(PacketList):
         for p in data:
             q = p.copy()
             q.unwep()
-            r2.append(Ether()/q.payload.payload.payload) #Dot11/LLC/SNAP/IP
-        return PacketList(r2, name="Ether from %s"%self.listname)
+            r2.append(Ether() / q.payload.payload.payload)  # Dot11/LLC/SNAP/IP
+        return PacketList(r2, name="Ether from %s" % self.listname)
 
 

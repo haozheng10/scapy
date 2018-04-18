@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 SuperSocket.
@@ -34,12 +34,12 @@ class _SuperSocket_metaclass(type):
 
 class SuperSocket(six.with_metaclass(_SuperSocket_metaclass)):
     desc = None
-    closed=0
+    closed = 0
 
     def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0):
         self.ins = socket.socket(family, type, proto)
         self.outs = self.ins
-        self.promisc=None
+        self.promisc = None
 
     def send(self, x):
         sx = raw(x)
@@ -85,7 +85,7 @@ class SuperSocket(six.with_metaclass(_SuperSocket_metaclass)):
 class L3RawSocket(SuperSocket):
     desc = "Layer 3 using Raw sockets (PF_INET/SOCK_RAW)"
 
-    def __init__(self, type = ETH_P_IP, filter=None, iface=None, promisc=None, nofilter=0):
+    def __init__(self, type=ETH_P_IP, filter=None, iface=None, promisc=None, nofilter=0):
         self.outs = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
         self.outs.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
         self.ins = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(type))
@@ -173,7 +173,7 @@ class SSLStreamSocket(StreamSocket):
         self._buf = b""
         super(SSLStreamSocket, self).__init__(sock, basecls)
 
-    #65535, the default value of x is the maximum length of a TLS record
+    # 65535, the default value of x is the maximum length of a TLS record
     def recv(self, x=65535):
         pkt = None
         if self._buf != b"":

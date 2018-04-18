@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
-##                     2015, 2016 Maxence Tury
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# Copyright (C) 2007, 2008, 2009 Arnaud Ebalard
+#               2015, 2016 Maxence Tury
+# This program is published under a GPLv2 license
 
 """
 HMAC classes.
@@ -14,10 +14,10 @@ from scapy.layers.tls.crypto.hash import _tls_hash_algs
 import scapy.modules.six as six
 from scapy.compat import *
 
-_SSLv3_PAD1_MD5  = b"\x36"*48
-_SSLv3_PAD1_SHA1 = b"\x36"*40
-_SSLv3_PAD2_MD5  = b"\x5c"*48
-_SSLv3_PAD2_SHA1 = b"\x5c"*40
+_SSLv3_PAD1_MD5 = b"\x36" * 48
+_SSLv3_PAD1_SHA1 = b"\x36" * 40
+_SSLv3_PAD2_MD5 = b"\x5c" * 48
+_SSLv3_PAD2_SHA1 = b"\x5c" * 40
 
 _tls_hmac_algs = {}
 

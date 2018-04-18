@@ -1,8 +1,8 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## Enhanced by Maxence Tury <maxence.tury@ssi.gouv.fr>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# Enhanced by Maxence Tury <maxence.tury@ssi.gouv.fr>
+# This program is published under a GPLv2 license
 
 """
 X.509 certificates.
@@ -39,9 +39,9 @@ class ASN1P_PRIVSEQ(ASN1_Packet):
 
 
 #######################
-##### RSA packets #####
+#     RSA packets     #
 #######################
-##### based on RFC 3447
+# based on RFC 3447
 
 # It could be interesting to use os.urandom and try to generate
 # a new modulus each time RSAPublicKey is called with default values.
@@ -79,13 +79,13 @@ class RSAPrivateKey(ASN1_Packet):
                               RSAOtherPrimeInfo)))
 
 ####################################
-########## ECDSA packets ###########
+#          ECDSA packets           #
 ####################################
-#### based on RFC 3279 & 5480 & 5915
+# based on RFC 3279 & 5480 & 5915
 
 
 class ECFieldID(ASN1_Packet):
-# No characteristic-two-field support for now.
+    # No characteristic-two-field support for now.
     ASN1_codec = ASN1_Codecs.BER
     ASN1_root = ASN1F_SEQUENCE(
         ASN1F_OID("fieldType", "prime-field"),
@@ -148,15 +148,15 @@ class ECDSASignature(ASN1_Packet):
 
 
 ######################
-#### X509 packets ####
+#    X509 packets    #
 ######################
-#### based on RFC 5280
+# based on RFC 5280
 
 
-####### Names #######
+#       Names       #
 
 class ASN1F_X509_DirectoryString(ASN1F_CHOICE):
-# we include ASN1 bit strings for rare instances of x500 addresses
+    # we include ASN1 bit strings for rare instances of x500 addresses
     def __init__(self, name, default, **kwargs):
         ASN1F_CHOICE.__init__(self, name, default,
                               ASN1F_PRINTABLE_STRING, ASN1F_UTF8_STRING,
@@ -184,7 +184,7 @@ class X509_Attribute(ASN1_Packet):
 
 class X509_AttributeTypeAndValue(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
-    ASN1_root =  ASN1F_SEQUENCE(
+    ASN1_root = ASN1F_SEQUENCE(
         ASN1F_OID("type", "2.5.4.6"),
         ASN1F_X509_DirectoryString("value",
                                    ASN1_PRINTABLE_STRING("FR")))
@@ -215,7 +215,7 @@ class X509_DNSName(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
     ASN1_root = ASN1F_IA5_STRING("dNSName", "")
 
-#XXX write me
+# XXX write me
 
 
 class X509_X400Address(ASN1_Packet):
@@ -290,13 +290,13 @@ class X509_GeneralName(ASN1_Packet):
                                           implicit_tag=0x88))
 
 
-####### Extensions #######
+#       Extensions       #
 
 class X509_ExtAuthorityKeyIdentifier(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
     ASN1_root = ASN1F_SEQUENCE(
         ASN1F_optional(
-            ASN1F_STRING("keyIdentifier", b"\xff"*20,
+            ASN1F_STRING("keyIdentifier", b"\xff" * 20,
                          implicit_tag=0x80)),
         ASN1F_optional(
             ASN1F_SEQUENCE_OF("authorityCertIssuer", None,
@@ -316,7 +316,7 @@ class X509_ExtSubjectDirectoryAttributes(ASN1_Packet):
 
 class X509_ExtSubjectKeyIdentifier(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
-    ASN1_root = ASN1F_STRING("keyIdentifier", "xff"*20)
+    ASN1_root = ASN1F_STRING("keyIdentifier", "xff" * 20)
 
 
 class X509_ExtFullName(ASN1_Packet):
@@ -410,7 +410,7 @@ class X509_ExtPolicyMappings(ASN1_Packet):
 
 
 class X509_ExtBasicConstraints(ASN1_Packet):
-# The cA field should not be optional, but some certs omit it for False.
+    # The cA field should not be optional, but some certs omit it for False.
     ASN1_codec = ASN1_Codecs.BER
     ASN1_root = ASN1F_SEQUENCE(
         ASN1F_optional(
@@ -658,32 +658,32 @@ class X509_ExtDefault(ASN1_Packet):
 # Here we only reproduce those written in RFC5280.
 _ext_mapping = {
     "2.5.29.9": X509_ExtSubjectDirectoryAttributes,
-        "2.5.29.14": X509_ExtSubjectKeyIdentifier,
-        "2.5.29.15": X509_ExtKeyUsage,
-        "2.5.29.16": X509_ExtPrivateKeyUsagePeriod,
-        "2.5.29.17": X509_ExtSubjectAltName,
-        "2.5.29.18": X509_ExtIssuerAltName,
-        "2.5.29.19": X509_ExtBasicConstraints,
-        "2.5.29.20": X509_ExtCRLNumber,
-        "2.5.29.21": X509_ExtReasonCode,
-        "2.5.29.24": X509_ExtInvalidityDate,
-        "2.5.29.27": X509_ExtDeltaCRLIndicator,
-        "2.5.29.28": X509_ExtIssuingDistributionPoint,
-        "2.5.29.29": X509_ExtCertificateIssuer,
-        "2.5.29.30": X509_ExtNameConstraints,
-        "2.5.29.31": X509_ExtCRLDistributionPoints,
-        "2.5.29.32": X509_ExtCertificatePolicies,
-        "2.5.29.33": X509_ExtPolicyMappings,
-        "2.5.29.35": X509_ExtAuthorityKeyIdentifier,
-        "2.5.29.36": X509_ExtPolicyConstraints,
-        "2.5.29.37": X509_ExtExtendedKeyUsage,
-        "2.5.29.46": X509_ExtFreshestCRL,
-        "2.5.29.54": X509_ExtInhibitAnyPolicy,
-        "2.16.840.1.113730.1.1": X509_ExtNetscapeCertType,
-        "2.16.840.1.113730.1.13": X509_ExtComment,
-        "1.3.6.1.5.5.7.1.1": X509_ExtAuthInfoAccess,
-        "1.3.6.1.5.5.7.1.3": X509_ExtQcStatements,
-        "1.3.6.1.5.5.7.1.11": X509_ExtSubjInfoAccess
+    "2.5.29.14": X509_ExtSubjectKeyIdentifier,
+    "2.5.29.15": X509_ExtKeyUsage,
+    "2.5.29.16": X509_ExtPrivateKeyUsagePeriod,
+    "2.5.29.17": X509_ExtSubjectAltName,
+    "2.5.29.18": X509_ExtIssuerAltName,
+    "2.5.29.19": X509_ExtBasicConstraints,
+    "2.5.29.20": X509_ExtCRLNumber,
+    "2.5.29.21": X509_ExtReasonCode,
+    "2.5.29.24": X509_ExtInvalidityDate,
+    "2.5.29.27": X509_ExtDeltaCRLIndicator,
+    "2.5.29.28": X509_ExtIssuingDistributionPoint,
+    "2.5.29.29": X509_ExtCertificateIssuer,
+    "2.5.29.30": X509_ExtNameConstraints,
+    "2.5.29.31": X509_ExtCRLDistributionPoints,
+    "2.5.29.32": X509_ExtCertificatePolicies,
+    "2.5.29.33": X509_ExtPolicyMappings,
+    "2.5.29.35": X509_ExtAuthorityKeyIdentifier,
+    "2.5.29.36": X509_ExtPolicyConstraints,
+    "2.5.29.37": X509_ExtExtendedKeyUsage,
+    "2.5.29.46": X509_ExtFreshestCRL,
+    "2.5.29.54": X509_ExtInhibitAnyPolicy,
+    "2.16.840.1.113730.1.1": X509_ExtNetscapeCertType,
+    "2.16.840.1.113730.1.13": X509_ExtComment,
+    "1.3.6.1.5.5.7.1.1": X509_ExtAuthInfoAccess,
+    "1.3.6.1.5.5.7.1.3": X509_ExtQcStatements,
+    "1.3.6.1.5.5.7.1.11": X509_ExtSubjInfoAccess
 }
 
 
@@ -740,7 +740,7 @@ class X509_Extensions(ASN1_Packet):
                           None, X509_Extension))
 
 
-####### Public key wrapper #######
+#       Public key wrapper       #
 
 class X509_AlgorithmIdentifier(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
@@ -814,9 +814,9 @@ class X509_SubjectPublicKeyInfo(ASN1_Packet):
     ASN1_root = ASN1F_X509_SubjectPublicKeyInfo()
 
 
-###### OpenSSL compatibility wrappers ######
+#      OpenSSL compatibility wrappers      #
 
-#XXX As ECDSAPrivateKey already uses the structure from RFC 5958,
+# XXX As ECDSAPrivateKey already uses the structure from RFC 5958,
 # and as we would prefer encapsulated RSA private keys to be parsed,
 # this lazy implementation actually supports RSA encoding only.
 # We'd rather call it RSAPrivateKey_OpenSSL than X509_PrivateKeyInfo.
@@ -865,7 +865,7 @@ class ECDSAPrivateKey_OpenSSL(Packet):
                                ECDSAPrivateKey)]
 
 
-####### TBSCertificate & Certificate #######
+#       TBSCertificate & Certificate       #
 
 _default_issuer = [
     X509_RDN(),
@@ -894,7 +894,7 @@ _default_subject = [
 
 class X509_Validity(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
-    ASN1_root =  ASN1F_SEQUENCE(
+    ASN1_root = ASN1F_SEQUENCE(
         ASN1F_CHOICE("not_before",
                      ASN1_UTC_TIME(str(ZuluTime(-600))),
                      ASN1F_UTC_TIME, ASN1F_GENERALIZED_TIME),
@@ -905,11 +905,11 @@ class X509_Validity(ASN1_Packet):
 
 _attrName_mapping = [
     ("countryName", "C"),
-        ("stateOrProvinceName", "ST"),
-        ("localityName", "L"),
-        ("organizationName", "O"),
-        ("organizationUnitName", "OU"),
-        ("commonName", "CN")
+    ("stateOrProvinceName", "ST"),
+    ("localityName", "L"),
+    ("organizationName", "O"),
+    ("organizationUnitName", "OU"),
+    ("commonName", "CN")
 ]
 _attrName_specials = [name for name, symbol in _attrName_mapping]
 
@@ -1014,7 +1014,7 @@ class ASN1F_X509_Cert(ASN1F_SEQUENCE):
                             X509_AlgorithmIdentifier(),
                             X509_AlgorithmIdentifier),
                ASN1F_BIT_STRING("signatureValue",
-                                "defaultsignature"*2)]
+                                "defaultsignature" * 2)]
         ASN1F_SEQUENCE.__init__(self, *seq, **kargs)
 
     def m2i(self, pkt, x):
@@ -1050,7 +1050,7 @@ class X509_Cert(ASN1_Packet):
     ASN1_root = ASN1F_X509_Cert()
 
 
-####### TBSCertList & CRL #######
+#       TBSCertList & CRL       #
 
 class X509_RevokedCertificate(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
@@ -1131,7 +1131,7 @@ class ASN1F_X509_CRL(ASN1F_SEQUENCE):
                             X509_AlgorithmIdentifier(),
                             X509_AlgorithmIdentifier),
                ASN1F_BIT_STRING("signatureValue",
-                                "defaultsignature"*2)]
+                                "defaultsignature" * 2)]
         ASN1F_SEQUENCE.__init__(self, *seq, **kargs)
 
     def m2i(self, pkt, x):
@@ -1168,9 +1168,9 @@ class X509_CRL(ASN1_Packet):
 
 
 #############################
-#### OCSP Status packets ####
+#    OCSP Status packets    #
 #############################
-########### based on RFC 6960
+# based on RFC 6960
 
 class OCSP_CertID(ASN1_Packet):
     ASN1_codec = ASN1_Codecs.BER
@@ -1292,7 +1292,7 @@ class ASN1F_OCSP_BasicResponse(ASN1F_SEQUENCE):
                             X509_AlgorithmIdentifier(),
                             X509_AlgorithmIdentifier),
                ASN1F_BIT_STRING("signature",
-                                "defaultsignature"*2),
+                                "defaultsignature" * 2),
                ASN1F_optional(
                    ASN1F_SEQUENCE_OF("certs", None, X509_Cert,
                                      explicit_tag=0xa0))]

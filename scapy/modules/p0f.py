@@ -1,7 +1,7 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Clone of p0f passive OS fingerprinting
@@ -29,14 +29,14 @@ if conf.route is None:
     # unused import, only to initialize conf.route
     import scapy.route
 
-conf.p0f_base ="/etc/p0f/p0f.fp"
-conf.p0fa_base ="/etc/p0f/p0fa.fp"
-conf.p0fr_base ="/etc/p0f/p0fr.fp"
-conf.p0fo_base ="/etc/p0f/p0fo.fp"
+conf.p0f_base = "/etc/p0f/p0f.fp"
+conf.p0fa_base = "/etc/p0f/p0fa.fp"
+conf.p0fr_base = "/etc/p0f/p0fr.fp"
+conf.p0fo_base = "/etc/p0f/p0fo.fp"
 
 
 ###############
-## p0f stuff ##
+#  p0f stuff  #
 ###############
 
 # File format (according to p0f.fp) :
@@ -55,11 +55,11 @@ conf.p0fo_base ="/etc/p0f/p0fo.fp"
 class p0fKnowledgeBase(KnowledgeBase):
     def __init__(self, filename):
         KnowledgeBase.__init__(self, filename)
-        #self.ttl_range=[255]
+        # self.ttl_range=[255]
 
     def lazy_init(self):
         try:
-            f=open(self.filename)
+            f = open(self.filename)
         except IOError:
             warning("Can't open base %s", self.filename)
             return
@@ -77,7 +77,7 @@ class p0fKnowledgeBase(KnowledgeBase):
                         return int(x)
                     return x
                 li = [a2i(e) for e in l[1:4]]
-                #if li[0] not in self.ttl_range:
+                # if li[0] not in self.ttl_range:
                 #    self.ttl_range.append(li[0])
                 #    self.ttl_range.sort()
                 self.base.append((l[0], li[0], li[1], li[2], l[4], l[5], l[6], l[7][:-1]))
@@ -130,15 +130,15 @@ def packet2p0f(pkt):
 
     if not isinstance(pkt, IP) or not isinstance(pkt.payload, TCP):
         raise TypeError("Not a TCP/IP packet")
-    #if pkt.payload.flags & 0x7 != 0x02: #S,!F,!R
+    # if pkt.payload.flags & 0x7 != 0x02: #S,!F,!R
     #    raise TypeError("Not a SYN or SYN/ACK packet")
 
     db = p0f_selectdb(pkt.payload.flags)
 
-    #t = p0f_kdb.ttl_range[:]
-    #t += [pkt.ttl]
-    #t.sort()
-    #ttl=t[t.index(pkt.ttl)+1]
+    # t = p0f_kdb.ttl_range[:]
+    # t += [pkt.ttl]
+    # t.sort()
+    # ttl=t[t.index(pkt.ttl)+1]
     ttl = pkt.ttl
 
     ss = len(pkt)
@@ -159,8 +159,8 @@ def packet2p0f(pkt):
     mss = -1
     qqT = False
     qqP = False
-    #qqBroken = False
-    ilen = (pkt.payload.dataofs << 2) - 20 # from p0f.c
+    # qqBroken = False
+    ilen = (pkt.payload.dataofs << 2) - 20  # from p0f.c
     for option in pkt.payload.options:
         ilen -= 1
         if option[0] == "MSS":
@@ -201,9 +201,9 @@ def packet2p0f(pkt):
     win = pkt.payload.window
     if mss != -1:
         if mss != 0 and win % mss == 0:
-            win = "S" + str(win/mss)
+            win = "S" + str(win / mss)
         elif win % (mss + 40) == 0:
-            win = "T" + str(win/(mss+40))
+            win = "T" + str(win / (mss + 40))
     win = str(win)
 
     qq = ""
@@ -301,7 +301,7 @@ p0f(packet) -> accuracy, [list of guesses]
     if not pb:
         warning("p0f base empty.")
         return []
-    #s = len(pb[0][0])
+    # s = len(pb[0][0])
     r = []
     max = len(sig[4].split(",")) + 5
     for b in pb:
@@ -331,7 +331,7 @@ def prnp0f(pkt):
         uptime = None
     res = pkt.sprintf("%IP.src%:%TCP.sport% - " + r[0] + " " + r[1])
     if uptime is not None:
-        res += pkt.sprintf(" (up: " + str(uptime/3600) + " hrs)\n  -> %IP.dst%:%TCP.dport% (%TCP.flags%)")
+        res += pkt.sprintf(" (up: " + str(uptime / 3600) + " hrs)\n  -> %IP.dst%:%TCP.dport% (%TCP.flags%)")
     else:
         res += pkt.sprintf("\n  -> %IP.dst%:%TCP.dport% (%TCP.flags%)")
     if r[2] is not None:
@@ -351,8 +351,8 @@ pkt2uptime(pkt, [HZ=100])"""
         return pkt2uptime(pkt.payload)
     for opt in pkt.options:
         if opt[0] == "Timestamp":
-            #t = pkt.time - opt[1][0] * 1.0/HZ
-            #return time.ctime(t)
+            # t = pkt.time - opt[1][0] * 1.0/HZ
+            # return time.ctime(t)
             t = opt[1][0] / HZ
             return t
     raise TypeError("No timestamp option")
@@ -369,7 +369,7 @@ specified (as a tuple), we use the signature.
 For now, only TCP Syn packets are supported.
 Some specifications of the p0f.fp file are not (yet) implemented."""
     pkt = pkt.copy()
-    #pkt = pkt.__class__(raw(pkt))
+    # pkt = pkt.__class__(raw(pkt))
     while pkt.haslayer(IP) and pkt.haslayer(TCP):
         pkt = pkt.getlayer(IP)
         if isinstance(pkt.payload, TCP):
@@ -418,9 +418,9 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                 # MSS might have a maximum size because of window size
                 # specification
                 if pers[0][0] == 'S':
-                    maxmss = (2**16-1) // int(pers[0][1:])
+                    maxmss = (2**16 - 1) // int(pers[0][1:])
                 else:
-                    maxmss = (2**16-1)
+                    maxmss = (2**16 - 1)
                 # disregard hint if out of range
                 if mss_hint and not 0 <= mss_hint <= maxmss:
                     mss_hint = None
@@ -439,7 +439,7 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                         options.append(('MSS', mss_hint))
                     else:
                         options.append((
-                            'MSS', coef*random.randint(1, maxmss//coef)))
+                            'MSS', coef * random.randint(1, maxmss // coef)))
                 else:
                     options.append(('MSS', int(opt[1:])))
             elif opt[0] == 'W':
@@ -456,7 +456,7 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                         options.append(('WScale', wscale_hint))
                     else:
                         options.append((
-                            'WScale', coef*RandNum(min=1, max=(2**8-1)//coef)))
+                            'WScale', coef * RandNum(min=1, max=(2**8 - 1) // coef)))
                 else:
                     options.append(('WScale', int(opt[1:])))
             elif opt == 'T0':
@@ -470,7 +470,7 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                     # hence we don't want to use the hint if it was 0.
                     ts_a = ts_hint[0]
                 else:
-                    ts_a = random.randint(120, 100*60*60*24*365)
+                    ts_a = random.randint(120, 100 * 60 * 60 * 24 * 365)
                 # Determine second timestamp.
                 if 'T' not in pers[5]:
                     ts_b = 0
@@ -483,7 +483,7 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                     #    oval = struct.pack(ofmt, *oval)"
                     # Actually, this is enough to often raise the error:
                     #    struct.pack('I', RandInt())
-                    ts_b = random.randint(1, 2**32-1)
+                    ts_b = random.randint(1, 2**32 - 1)
                 options.append(('Timestamp', (ts_a, ts_b)))
             elif opt == 'S':
                 options.append(('SAckOK', ''))
@@ -500,7 +500,7 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
                                                   RandString(struct.calcsize(optstruct))._fix())))
                 else:
                     options.append((int(opt[1:]), ''))
-            ## FIXME: qqP not handled
+            # FIXME: qqP not handled
             else:
                 warning("unhandled TCP option " + opt)
             pkt.payload.options = options
@@ -512,11 +512,11 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
         pkt.payload.window = int(pers[0])
     elif pers[0][0] == '%':
         coef = int(pers[0][1:])
-        pkt.payload.window = coef * RandNum(min=1, max=(2**16-1)//coef)
+        pkt.payload.window = coef * RandNum(min=1, max=(2**16 - 1) // coef)
     elif pers[0][0] == 'T':
         pkt.payload.window = mtu * int(pers[0][1:])
     elif pers[0][0] == 'S':
-        ## needs MSS set
+        # needs MSS set
         mss = [x for x in options if x[0] == 'MSS']
         if not mss:
             raise Scapy_Exception("TCP window value requires MSS, and MSS option not set")
@@ -525,29 +525,29 @@ Some specifications of the p0f.fp file are not (yet) implemented."""
         raise Scapy_Exception('Unhandled window size specification')
 
     # ttl
-    pkt.ttl = pers[1]-extrahops
+    pkt.ttl = pers[1] - extrahops
     # DF flag
     pkt.flags |= (2 * pers[2])
-    ## FIXME: ss (packet size) not handled (how ? may be with D quirk
-    ## if present)
+    # FIXME: ss (packet size) not handled (how ? may be with D quirk
+    # if present)
     # Quirks
     if pers[5] != '.':
         for qq in pers[5]:
-            ## FIXME: not handled: P, I, X, !
+            # FIXME: not handled: P, I, X, !
             # T handled with the Timestamp option
             if qq == 'Z': pkt.id = 0
             elif qq == 'U': pkt.payload.urgptr = RandShort()
             elif qq == 'A': pkt.payload.ack = RandInt()
             elif qq == 'F':
                 if db == p0fo_kdb:
-                    pkt.payload.flags |= 0x20 # U
+                    pkt.payload.flags |= 0x20  # U
                 else:
                     pkt.payload.flags |= random.choice([8, 32, 40])  # P/U/PU
             elif qq == 'D' and db != p0fo_kdb:
-                pkt /= conf.raw_layer(load=RandString(random.randint(1, 10))) # XXX p0fo.fp
+                pkt /= conf.raw_layer(load=RandString(random.randint(1, 10)))  # XXX p0fo.fp
             elif qq == 'Q': pkt.payload.seq = pkt.payload.ack
-            #elif qq == '0': pkt.payload.seq = 0
-        #if db == p0fr_kdb:
+            # elif qq == '0': pkt.payload.seq = 0
+        # if db == p0fr_kdb:
         # '0' quirk is actually not only for p0fr.fp (see
         # packet2p0f())
     if '0' in pers[5]:
@@ -588,8 +588,8 @@ interface and may (are likely to) be different than those generated on
         iface = conf.route.route('127.0.0.1')[0]
         # each packet is seen twice: S + RA, S + SA + A + FA + A
         # XXX are the packets also seen twice on non Linux systems ?
-        count=14
-        pl = sniff(iface=iface, filter='tcp and port ' + str(port), count = count, timeout=3)
+        count = 14
+        pl = sniff(iface=iface, filter='tcp and port ' + str(port), count=count, timeout=3)
         for pkt in pl:
             for elt in packet2p0f(pkt):
                 addresult(elt)
@@ -600,7 +600,7 @@ interface and may (are likely to) be different than those generated on
         # child: send
         # XXX erk
         time.sleep(1)
-        s1 = socket.socket(socket.AF_INET, type = socket.SOCK_STREAM)
+        s1 = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
         # S & RA
         try:
             s1.connect(('127.0.0.1', port))
