@@ -50,7 +50,7 @@ def construct_source_candidate_set(addr, plen, laddr):
             return res
         # two global addresses: if one is native, it wins.
         if not in6_isaddr6to4(x):
-            return -1;
+            return -1
         return -res
 
     cset = []
@@ -202,9 +202,11 @@ def in6_mactoifaceid(mac, ulbit=None):
     the reversed value of that in given MAC address it can be forced
     to a specific value by using optional 'ulbit' parameter.
     """
-    if len(mac) != 17: return None
+    if len(mac) != 17:
+        return None
     m = "".join(mac.split(':'))
-    if len(m) != 12: return None
+    if len(m) != 12:
+        return None
     first = int(m[0:2], 16)
     if ulbit is None or not (ulbit == 0 or ulbit == 1):
         ulbit = [1, '-', 0][first & 0x02]
@@ -286,7 +288,7 @@ def in6_getLinkScopedMcastAddr(addr, grpid=None, scope=2):
     If no link-local address can be used to generate the Link-Scoped IPv6
     Multicast address, or if another error occurs, None is returned.
     """
-    if not scope in [0, 1, 2]:
+    if scope not in [0, 1, 2]:
         return None
     try:
         if not in6_islladdr(addr):

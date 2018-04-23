@@ -8,6 +8,11 @@ then
   then
     brew upgrade python
     pip3 install tox
+    if [ ! -z $SCAPY_USE_PCAPDNET ]
+    then
+      brew update
+      brew install libdnet libpcap
+    fi
     exit 0
   fi
 
@@ -15,6 +20,12 @@ then
   if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$TRAVIS_SUDO" = "true" ]
   then
     sudo apt-get -qy install tshark
+  fi
+
+  # Install pcap & dnet
+  if [ ! -z $SCAPY_USE_PCAPDNET ] && [ "$TRAVIS_OS_NAME" = "linux" ]
+  then
+    $SCAPY_SUDO apt-get -qy install libdumbnet-dev libpcap-dev
   fi
 
   # Make sure tox is installed and up to date
@@ -48,6 +59,14 @@ if ! python --version 2>&1 | grep -q PyPy; then
   # cryptography requires PyPy >= 2.6, Travis CI uses 2.5.0
   $SCAPY_SUDO $PIP install $PIP_INSTALL_FLAGS -U cryptography
 fi
+
+# Install CANSocket related components
+$SCAPY_SUDO $PIP install $PIP_INSTALL_FLAGS -U python-can
+if [ "$TRAVIS_OS_NAME" = "linux" ]
+then
+  $SCAPY_SUDO apt-get -qy install can-utils
+fi
+
 
 # Install coverage
 if [ "$SCAPY_COVERAGE" = "yes" ]

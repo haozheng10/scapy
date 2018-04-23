@@ -88,7 +88,9 @@ def _sndrcv_rcv(pks, tobesent, stopevent, nbrecv, notans, verbose, chainCC,
         h = i.hashret()
         hsent.setdefault(i.hashret(), []).append(i)
 
-    if WINDOWS:
+    is_python_can_socket = getattr(pks, "is_python_can_socket", lambda: False)
+
+    if WINDOWS and not is_python_can_socket():
         def _get_pkt():
             return pks.recv(MTU)
     elif conf.use_bpf:
@@ -97,6 +99,9 @@ def _sndrcv_rcv(pks, tobesent, stopevent, nbrecv, notans, verbose, chainCC,
         def _get_pkt():
             if bpf_select([pks]):
                 return pks.recv()
+    elif is_python_can_socket():
+        def _get_pkt():
+            return pks.recv()
     elif (conf.use_pcap and not isinstance(pks, (StreamSocket, L3RawSocket, L2ListenTcpdump))) or \
          (not isinstance(pks, (StreamSocket, L2ListenTcpdump)) and (DARWIN or FREEBSD or OPENBSD)):
         def _get_pkt():
@@ -640,7 +645,8 @@ iface:    listen answers only on the given interface"""
 @conf.commands.register
 def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
           L2socket=None, timeout=None, opened_socket=None,
-          stop_filter=None, interpkt_timeout=None, iface=None, *arg, **karg):
+          stop_filter=None, interpkt_timeout=None, iface=None,
+          started_callback=None, *arg, **karg):
     """
     Sniff packets and return a list of packets.
 
@@ -669,6 +675,8 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
         iface: interface or list of interfaces (default: None for sniffing
                on all interfaces).
         monitor: use monitor mode. May not be available on all OS
+        started_callback: called as soon as the sniffer starts sniffing
+                          (default: None).
 
     The iface, offline and opened_socket parameters can be either an
     element, a list of elements, or a dict object mapping an element to a
@@ -736,12 +744,13 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
         interpkt_stoptime = time.time() + interpkt_timeout
     remain = None
     read_allowed_exceptions = ()
+    is_python_can_socket = getattr(opened_socket, "is_python_can_socket", lambda: False)
     if conf.use_bpf:
         from scapy.arch.bpf.supersocket import bpf_select
 
         def _select(sockets):
             return bpf_select(sockets, remain)
-    elif WINDOWS:
+    elif WINDOWS and not is_python_can_socket():
         from scapy.arch.pcapdnet import PcapTimeoutElapsed
         read_allowed_exceptions = (PcapTimeoutElapsed,)
 
@@ -750,6 +759,12 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
                 return sockets
             except PcapTimeoutElapsed:
                 return []
+    elif is_python_can_socket():
+        from scapy.contrib.cansocket_python_can import CANSocketTimeoutElapsed
+        read_allowed_exceptions = (CANSocketTimeoutElapsed,)
+
+        def _select(sockets):
+            return sockets
     else:
         def _select(sockets):
             try:
@@ -760,6 +775,8 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
                     return []
                 raise
     try:
+        if started_callback:
+            started_callback()
         while sniff_sockets:
             if timeout is not None:
                 remain = stoptime - time.time()
@@ -776,6 +793,11 @@ def sniff(count=0, store=True, offline=None, prn=None, lfilter=None,
                 except read_allowed_exceptions:
                     continue
                 if p is None:
+                    try:
+                        if s.promisc:
+                            continue
+                    except AttributeError:
+                        pass
                     del sniff_sockets[s]
                     break
                 if lfilter and not lfilter(p):

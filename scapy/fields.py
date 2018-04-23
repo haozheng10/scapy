@@ -532,6 +532,16 @@ class XIntField(IntField):
         return lhex(self.i2h(pkt, x))
 
 
+class XLEIntField(LEIntField, XIntField):
+    def i2repr(self, pkt, x):
+        return XIntField.i2repr(self, pkt, x)
+
+
+class XLEShortField(LEShortField, XShortField):
+    def i2repr(self, pkt, x):
+        return XShortField.i2repr(self, pkt, x)
+
+
 class LongField(Field):
     def __init__(self, name, default):
         Field.__init__(self, name, default, "Q")
@@ -1695,7 +1705,7 @@ class _IPPrefixFieldBase(Field):
     def i2m(self, pkt, x):
         # ("fc00:1::1", 64) -> (b"\xfc\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 64)
         (pfx, pfxlen) = x
-        s = self.aton(pfx);
+        s = self.aton(pfx)
         return (s[:self._numbytes(pfxlen)], pfxlen)
 
     def m2i(self, pkt, x):
@@ -1759,7 +1769,7 @@ class UTCTimeField(IntField):
         return "%s (%d)" % (t, x)
 
     def i2m(self, pkt, x):
-        return int(x) if x != None else 0
+        return int(x) if x is not None else 0
 
 
 class SecondsIntField(IntField):
