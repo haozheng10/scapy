@@ -18,7 +18,7 @@
 # scapy.contrib.status = loads
 
 """
-I-TAG Backbone Service Instance Tag
+I-TAG Backbone Service Instance Tag, formerly Provider Backbone Bridge
       Bridges and Bridged Networks
 
 [IEEE Std 802.1Q 2014]
@@ -65,5 +65,6 @@ class ITag(Packet):
         return self.sprintf("I-Tag (I-SID %isid% UCA %uca% C-SA %csa% > C-DA %cda% (%type%))")
 
 
+bind_layers(Ether, ITag, type=0x88e7)
 bind_layers(Dot1Q, ITag, type=0x88e7)
 bind_layers(ITag, Dot1Q, type=0x8100)
